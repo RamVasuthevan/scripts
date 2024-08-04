@@ -2,7 +2,6 @@ import os
 import requests
 import pickle
 import json
-import csv
 from bs4 import BeautifulSoup
 
 # URL to download data from
@@ -83,38 +82,16 @@ def save_to_json(data, json_file_path):
     with open(json_file_path, 'w', encoding='utf-8') as json_file:
         json.dump(data, json_file, ensure_ascii=False, indent=4)
 
-# Function to save data to a CSV file
-def save_to_csv(data, csv_file_path):
-    # Define the header for the CSV file
-    header = ["Property name text", "Property name link", "Street address", "Municipality", "Construction year(s)", "Heritage Conservation District"]
-
-    # Write the data to the CSV file
-    with open(csv_file_path, 'w', newline='', encoding='utf-8') as csv_file:
-        writer = csv.DictWriter(csv_file, fieldnames=header)
-
-        # Write the header
-        writer.writeheader()
-
-        # Write the rows
-        for row in data:
-            writer.writerow(row)
-
-    print(f"Data successfully written to {csv_file_path}")
-
 # Download and save the data
 # download_and_save_data(url, pickle_file_path)
 
 # Extract the table from the pickle file
 extracted_data = extract_table_from_pickle(pickle_file_path)
 
-# File paths for the JSON and CSV files
+# File path for the JSON file
 json_file_path = os.path.join(save_directory, "search_results.json")
-csv_file_path = os.path.join(save_directory, "search_results.csv")
 
 # Save the extracted data to a JSON file
 save_to_json(extracted_data, json_file_path)
 
-# Save the extracted data to a CSV file
-save_to_csv(extracted_data, csv_file_path)
-
-print(f"Data successfully written to {json_file_path} and {csv_file_path}")
+print(f"Data successfully written to {json_file_path}")
