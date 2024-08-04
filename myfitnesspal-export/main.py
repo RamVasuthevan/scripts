@@ -3,6 +3,7 @@ import email
 from email.header import decode_header
 from dotenv import load_dotenv
 import os
+from bs4 import BeautifulSoup
 
 # Load environment variables from .env file
 load_dotenv()
@@ -40,33 +41,44 @@ for mail_id in messages:
             # Parse the email
             msg = email.message_from_bytes(response_part[1])
 
-            # Decode the email subject
-            subject, encoding = decode_header(msg['Subject'])[0]
-            if isinstance(subject, bytes):
-                subject = subject.decode(encoding if encoding else 'utf-8')
-
-            # Decode the email sender
-            sender, encoding = decode_header(msg.get('From'))[0]
-            if isinstance(sender, bytes):
-                sender = sender.decode(encoding if encoding else 'utf-8')
-
-            # Print the email details
-            print(f"Subject: {subject}")
-            print(f"From: {sender}")
-
             # Check if the email is multipart
             if msg.is_multipart():
                 # Iterate over each part
                 for part in msg.walk():
-                    # Check if the part is text or HTML
-                    if part.get_content_type() == 'text/plain':
-                        # Extract the text content
-                        email_content = part.get_payload(decode=True).decode()
-                        print(f"Email Content: {email_content}")
+                    # Check if the part is text/html
+                    if part.get_content_type() == 'text/html':
+                        # Extract the HTML content
+                        html_content = part.get_payload(decode=True).decode()
+
+                        # Parse the HTML with BeautifulSoup
+                        soup = BeautifulSoup(html_content, 'lxml')  # Use lxml
+
+                        # Find the .mfp-default--body div and the specific <a> tag
+                        body_div = soup.find('div', class_='mfp-default--body')
+                        if body_div:
+                            # Find the <a> tag with the text "Download Files"
+                            download_link = body_div.find('a', string='Download Files')
+                            if download_link:
+                                print(f"Download Link Text: {download_link.text}")
+                                print(f"Download Link URL: {download_link['href']}")
+
             else:
-                # If not multipart, get the payload
-                email_content = msg.get_payload(decode=True).decode()
-                print(f"Email Content: {email_content}")
+                # If not multipart, check if it is HTML
+                if msg.get_content_type() == 'text/html':
+                    # Extract the HTML content
+                    html_content = msg.get_payload(decode=True).decode()
+
+                    # Parse the HTML with BeautifulSoup
+                    soup = BeautifulSoup(html_content, 'lxml')  # Use lxml
+
+                    # Find the .mfp-default--body div and the specific <a> tag
+                    body_div = soup.find('div', class_='mfp-default--body')
+                    if body_div:
+                        # Find the <a> tag with the text "Download Files"
+                        download_link = body_div.find('a', string='Download Files')
+                        if download_link:
+                            print(f"Download Link Text: {download_link.text}")
+                            print(f"Download Link URL: {download_link['href']}")
 
 # Logout from the email server
 mail.logout()
