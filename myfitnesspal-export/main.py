@@ -19,54 +19,43 @@ mail = imaplib.IMAP4_SSL(imap_url, 993)  # Specify the port 993 for SSL
 # Login to your email account
 mail.login(email_user, email_password)
 
-# Select the "[Gmail]/All Mail" folder, which contains all emails
-mail.select('"[Gmail]/All Mail"', readonly=True)
+# Select the mailbox you want to check in read-only mode
+mail.select('inbox', readonly=True)
 
-# Use X-GM-RAW to search across all emails in the account
-search_query = 'X-GM-RAW "from:no-reply@myfitnesspal.com subject:\\"Your MyFitnessPal Export\\""'
-status, messages = mail.uid('SEARCH', None, search_query)
+# Search for emails with specific subject and sender
+status, messages = mail.search(
+    None,
+    '(FROM "no-reply@myfitnesspal.com" SUBJECT "Your MyFitnessPal Export")'
+)
 
-# Check if any messages were found
-if status == "OK" and messages[0]:
-    message_uids = messages[0].split()
-    print(f"Found {len(message_uids)} messages.")
+# Convert message IDs to a list
+messages = messages[0].split()
 
-    # Iterate through each email
-    for mail_uid in message_uids:
-        # Fetch the email by UID
-        status, msg_data = mail.uid('FETCH', mail_uid, '(RFC822)')
+# Iterate through each email
+for mail_id in messages:
+    # Fetch the email by ID
+    status, msg_data = mail.fetch(mail_id, '(RFC822)')
 
-        for response_part in msg_data:
-            if isinstance(response_part, tuple):
-                # Parse the email
-                msg = email.message_from_bytes(response_part[1])
+    for response_part in msg_data:
+        if isinstance(response_part, tuple):
+            # Parse the email
+            msg = email.message_from_bytes(response_part[1])
 
-                # Check if the email is multipart
-                if msg.is_multipart():
-                    # Iterate over each part
-                    for part in msg.walk():
-                        # Check if the part is text/html
-                        if part.get_content_type() == 'text/html':
-                            # Extract the HTML content
-                            html_content = part.get_payload(decode=True).decode()
+            # Print metadata
+            print("----- Email Metadata -----")
+            print(f"Date: {msg.get('Date')}")
+            print(f"Message-ID: {msg.get('Message-ID')}")
+            print("----------------------------")
 
-                            # Parse the HTML with BeautifulSoup
-                            soup = BeautifulSoup(html_content, 'lxml')  # Use lxml
-
-                            # Find the .mfp-default--body div and the specific <a> tag
-                            body_div = soup.find('div', class_='mfp-default--body')
-                            if body_div:
-                                # Find the <a> tag with the text "Download Files"
-                                download_link = body_div.find('a', string='Download Files')
-                                if download_link:
-                                    print(f"Download Link Text: {download_link.text}")
-                                    print(f"Download Link URL: {download_link['href']}")
-
-                else:
-                    # If not multipart, check if it is HTML
-                    if msg.get_content_type() == 'text/html':
+            # Check if the email is multipart
+            if msg.is_multipart():
+                print("****TRUE*****")
+                # Iterate over each part
+                for part in msg.walk():
+                    # Check if the part is text/html
+                    if part.get_content_type() == 'text/html':
                         # Extract the HTML content
-                        html_content = msg.get_payload(decode=True).decode()
+                        html_content = part.get_payload(decode=True).decode()
 
                         # Parse the HTML with BeautifulSoup
                         soup = BeautifulSoup(html_content, 'lxml')  # Use lxml
@@ -79,8 +68,25 @@ if status == "OK" and messages[0]:
                             if download_link:
                                 print(f"Download Link Text: {download_link.text}")
                                 print(f"Download Link URL: {download_link['href']}")
-else:
-    print("No messages found.")
+
+            else:
+                print("****FALSE*****")
+                # If not multipart, check if it is HTML
+                if msg.get_content_type() == 'text/html':
+                    # Extract the HTML content
+                    html_content = msg.get_payload(decode=True).decode()
+
+                    # Parse the HTML with BeautifulSoup
+                    soup = BeautifulSoup(html_content, 'lxml')  # Use lxml
+
+                    # Find the .mfp-default--body div and the specific <a> tag
+                    body_div = soup.find('div', class_='mfp-default--body')
+                    if body_div:
+                        # Find the <a> tag with the text "Download Files"
+                        download_link = body_div.find('a', string='Download Files')
+                        if download_link:
+                            print(f"Download Link Text: {download_link.text}")
+                            print(f"Download Link URL: {download_link['href']}")
 
 # Logout from the email server
 mail.logout()
