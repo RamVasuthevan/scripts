@@ -6,6 +6,8 @@ import os
 from typing import List, Optional, Tuple
 from bs4 import BeautifulSoup
 import logging
+import requests
+from urllib.parse import urlparse, unquote
 
 # Configure logging to write only to a file
 logging.basicConfig(
@@ -104,6 +106,35 @@ def extract_and_return_link(html_content: str, message_id: str) -> Optional[Tupl
 
     return None
 
+def get_filename_from_content_disposition(headers) -> Optional[str]:
+    """Extract the filename from the Content-Disposition header."""
+    content_disposition = headers.get('Content-Disposition')
+    if content_disposition:
+        parts = content_disposition.split(';')
+        for part in parts:
+            if 'filename=' in part:
+                filename = part.split('=')[1].strip('"')
+                return filename
+    return None
+
+def download_file(url: str):
+    """Download a file from the given URL and save it with the server-specified filename."""
+    logger.info(f"Starting download from {url}")
+    response = requests.get(url, stream=True)
+    if response.status_code == 200:
+        # Attempt to get the filename from the Content-Disposition header
+        filename = get_filename_from_content_disposition(response.headers)
+
+        logger.info(f"Saving file as {filename}")
+
+        with open(filename, 'wb') as file:
+            for chunk in response.iter_content(chunk_size=1024):
+                if chunk:
+                    file.write(chunk)
+        logger.info(f"File downloaded and saved as {filename}")
+    else:
+        logger.error(f"Failed to download file from {url}. Status code: {response.status_code}")
+
 def main():
     """Main function to run the email processing."""
     logger.info("Starting the email processing script")
@@ -115,6 +146,8 @@ def main():
             if result:
                 message_id, download_link = result
                 logger.info(f"{message_id}: Download link: {download_link}")
+                # Download the file using the name provided by the server
+                download_file(download_link)
     finally:
         logger.info("Logging out from the email server")
         mail.logout()
