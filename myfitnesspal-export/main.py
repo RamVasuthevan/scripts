@@ -8,6 +8,7 @@ from bs4 import BeautifulSoup
 import logging
 import requests
 from urllib.parse import urlparse, unquote
+import zipfile
 
 # Configure logging to write only to a file
 logging.basicConfig(
@@ -19,6 +20,9 @@ logging.basicConfig(
 )
 
 logger = logging.getLogger(__name__)
+
+# Magic variable for the directory to save downloaded files
+SAVE_DIR: str = "data"
 
 def connect_to_email() -> imaplib.IMAP4_SSL:
     """Connect to the email server and log in."""
@@ -53,8 +57,8 @@ def fetch_and_process_email(mail: imaplib.IMAP4_SSL, mail_id: bytes) -> Optional
     for response_part in msg_data:
         if isinstance(response_part, tuple):
             msg = email.message_from_bytes(response_part[1])
-            message_id = msg.get('Message-ID')
-            date = msg.get('Date')
+            message_id: str = msg.get('Message-ID')
+            date: str = msg.get('Date')
 
             if msg.is_multipart():
                 logger.info(f"{message_id} - {date}: Processing multipart email")
@@ -67,24 +71,24 @@ def fetch_and_process_email(mail: imaplib.IMAP4_SSL, mail_id: bytes) -> Optional
 
 def process_multipart_email(msg: Message) -> Optional[Tuple[str, str]]:
     """Process a multipart email and extract the download link."""
-    message_id = msg.get('Message-ID')
-    date = msg.get('Date')
+    message_id: str = msg.get('Message-ID')
+    date: str = msg.get('Date')
     logger.info(f"{message_id} - {date}: Walking through the parts of a multipart email")
     for part in msg.walk():
         if part.get_content_type() == 'text/html':
             logger.info(f"{message_id} - {date}: Processing HTML content part")
-            html_content = part.get_payload(decode=True).decode()
+            html_content: str = part.get_payload(decode=True).decode()
             return extract_and_return_link(html_content, message_id)
 
     return None
 
 def process_singlepart_email(msg: Message) -> Optional[Tuple[str, str]]:
     """Process a single-part email and extract the download link."""
-    message_id = msg.get('Message-ID')
-    date = msg.get('Date')
+    message_id: str = msg.get('Message-ID')
+    date: str = msg.get('Date')
     logger.info(f"{message_id} - {date}: Processing singlepart email content")
     if msg.get_content_type() == 'text/html':
-        html_content = msg.get_payload(decode=True).decode()
+        html_content: str = msg.get_payload(decode=True).decode()
         return extract_and_return_link(html_content, message_id)
 
     return None
@@ -117,21 +121,47 @@ def get_filename_from_content_disposition(headers) -> Optional[str]:
                 return filename
     return None
 
-def download_file(url: str):
-    """Download a file from the given URL and save it with the server-specified filename."""
+def get_filename_from_url(url: str) -> str:
+    """Extract the filename from the URL."""
+    parsed_url = urlparse(url)
+    filename = os.path.basename(parsed_url.path)
+    return unquote(filename)  # Decodes URL-encoded characters
+
+def download_and_extract_file(url: str, save_dir: str):
+    """Download a file from the given URL, save it, extract its contents into a folder with the same name, and delete the ZIP file."""
     logger.info(f"Starting download from {url}")
     response = requests.get(url, stream=True)
     if response.status_code == 200:
         # Attempt to get the filename from the Content-Disposition header
-        filename = get_filename_from_content_disposition(response.headers)
+        filename: Optional[str] = get_filename_from_content_disposition(response.headers)
+        if not filename:
+            # Fallback to extracting the filename from the URL if Content-Disposition is not available
+            filename = get_filename_from_url(url)
 
-        logger.info(f"Saving file as {filename}")
+        # Ensure the save directory exists
+        os.makedirs(save_dir, exist_ok=True)
 
-        with open(filename, 'wb') as file:
+        # Save the file to the specified directory
+        save_path: str = os.path.join(save_dir, filename)
+        logger.info(f"Saving file as {save_path}")
+
+        with open(save_path, 'wb') as file:
             for chunk in response.iter_content(chunk_size=1024):
                 if chunk:
                     file.write(chunk)
-        logger.info(f"File downloaded and saved as {filename}")
+        logger.info(f"File downloaded and saved as {save_path}")
+
+        # Extract the contents of the ZIP file into a directory named after the ZIP file
+        extract_dir = os.path.join(save_dir, os.path.splitext(filename)[0])
+        os.makedirs(extract_dir, exist_ok=True)
+        with zipfile.ZipFile(save_path, 'r') as zip_ref:
+            zip_ref.extractall(extract_dir)
+            logger.info(f"Extracted contents of {save_path} to {extract_dir}")
+
+        # Delete the ZIP file
+        os.remove(save_path)
+        logger.info(f"Deleted the ZIP file: {save_path}")
+
     else:
         logger.error(f"Failed to download file from {url}. Status code: {response.status_code}")
 
@@ -146,8 +176,8 @@ def main():
             if result:
                 message_id, download_link = result
                 logger.info(f"{message_id}: Download link: {download_link}")
-                # Download the file using the name provided by the server
-                download_file(download_link)
+                # Download the file, extract it into a folder named after the ZIP file, and delete the ZIP file
+                download_and_extract_file(download_link, save_dir=SAVE_DIR)
     finally:
         logger.info("Logging out from the email server")
         mail.logout()
