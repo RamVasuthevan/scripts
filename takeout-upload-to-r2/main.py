@@ -53,13 +53,18 @@ def upload_to_r2(bucket_name, file_name, r2_endpoint):
             transfer = S3Transfer(s3_client, config=transfer_config)
             transfer.upload_file(file_path, bucket_name, file_name, callback=progress_bar.update_to)
             print(f"\nFile '{file_name}' uploaded to bucket '{bucket_name}' as '{file_name}'.")
+
+            # Delete the file after successful upload
+            os.remove(file_path)
+            print(f"File '{file_name}' successfully deleted from local storage.")
+
         except Exception as e:
             print(f"\nFailed to upload file: {e}")
 
 if __name__ == "__main__":
     # These values are specific to your setup
     BUCKET_NAME = 'test'
-    FILE_NAME = 'takeout-20240806T032531Z-001.zip'
+    FILE_NAME = 'takeout-20240806T032531Z-002.zip'
     R2_ENDPOINT = 'https://d07df139f817312af7e88eb0528dbdd0.r2.cloudflarestorage.com'
 
     upload_to_r2(BUCKET_NAME, FILE_NAME, R2_ENDPOINT)
