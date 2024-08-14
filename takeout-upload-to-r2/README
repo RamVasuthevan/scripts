@@ -1,4 +1,9 @@
-add send2trash
-handle add files to folder while uploding
-list unloaded file
-check files already in R2
+Uploads files in data to R2 Bucket
+
+
+Todo:
+- Add send2trash
+- Handle adding files to the folder while uploading
+- List unloaded files
+- Check files already in R2
+

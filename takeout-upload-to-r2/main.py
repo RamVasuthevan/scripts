@@ -4,13 +4,14 @@ import os
 from dotenv import load_dotenv
 from boto3.s3.transfer import TransferConfig, S3Transfer
 from tqdm import tqdm
+import time
 
 class TqdmUpTo(tqdm):
     def update_to(self, bytes_amount):
         # Update the progress bar by the given number of bytes
         self.update(bytes_amount)
 
-def upload_file(s3_client, file_path, bucket_name, r2_endpoint):
+def upload_file(s3_client, file_path, bucket_name, r2_endpoint, retries=3):
     file_name = os.path.basename(file_path)
     file_size = os.path.getsize(file_path)
 
@@ -24,18 +25,24 @@ def upload_file(s3_client, file_path, bucket_name, r2_endpoint):
 
     # Initialize a progress bar
     with TqdmUpTo(total=file_size, unit='B', unit_scale=True, desc=file_name) as progress_bar:
-        # Upload the file using multipart upload
-        try:
-            transfer = S3Transfer(s3_client, config=transfer_config)
-            transfer.upload_file(file_path, bucket_name, file_name, callback=progress_bar.update_to)
-            print(f"\nFile '{file_name}' uploaded to bucket '{bucket_name}' as '{file_name}'.")
+        for attempt in range(retries):
+            try:
+                transfer = S3Transfer(s3_client, config=transfer_config)
+                transfer.upload_file(file_path, bucket_name, file_name, callback=progress_bar.update_to)
+                print(f"\nFile '{file_name}' uploaded to bucket '{bucket_name}' as '{file_name}'.")
 
-            # Delete the file after successful upload
-            os.remove(file_path)
-            print(f"File '{file_name}' successfully deleted from local storage.")
+                # Delete the file after successful upload
+                os.remove(file_path)
+                print(f"File '{file_name}' successfully deleted from local storage.")
+                break  # Break the loop if upload succeeds
 
-        except Exception as e:
-            print(f"\nFailed to upload file '{file_name}': {e}")
+            except Exception as e:
+                print(f"\nFailed to upload file '{file_name}' (attempt {attempt + 1}/{retries}): {e}")
+                if attempt + 1 < retries:
+                    print("Retrying...")
+                    time.sleep(5)  # Wait for a bit before retrying
+                else:
+                    print("Max retries reached, moving to next file.")
 
 def upload_folder_to_r2(folder_path, bucket_name, r2_endpoint):
     # Load environment variables from .env file
@@ -56,22 +63,34 @@ def upload_folder_to_r2(folder_path, bucket_name, r2_endpoint):
             retries={
                 'max_attempts': 10,
                 'mode': 'standard'
-            }
+            },
+            connect_timeout=60,
+            read_timeout=60,
+            max_pool_connections=10,
         )
     )
 
-    # Collect and sort the files in the folder alphabetically
-    files_to_upload = []
-    for root, _, files in os.walk(folder_path):
-        for file in files:
-            files_to_upload.append(os.path.join(root, file))
+    processed_files = set()  # To keep track of already processed files
 
-    # Sort the files alphabetically
-    files_to_upload.sort()
+    while True:
+        # Collect and sort the files in the folder alphabetically
+        files_to_upload = []
+        for root, _, files in os.walk(folder_path):
+            for file in files:
+                file_path = os.path.join(root, file)
+                if file_path not in processed_files:  # Only process new files
+                    files_to_upload.append(file_path)
 
-    # Upload the files in alphabetical order
-    for file_path in files_to_upload:
-        upload_file(s3_client, file_path, bucket_name, r2_endpoint)
+        # Sort the files alphabetically
+        files_to_upload.sort()
+
+        # Upload the files in alphabetical order
+        for file_path in files_to_upload:
+            upload_file(s3_client, file_path, bucket_name, r2_endpoint)
+            processed_files.add(file_path)  # Mark the file as processed
+
+        print("Waiting for new files...")
+        time.sleep(10)  # Wait for 10 seconds before checking for new files
 
 if __name__ == "__main__":
     # These values are specific to your setup
