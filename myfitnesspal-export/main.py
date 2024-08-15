@@ -25,7 +25,7 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 # Magic variable for the directory to save downloaded files
-SAVE_DIR: str = "data"
+SAVE_DIR: str = "dogsheep-data/myfitnesspal-export"
 
 def connect_to_email() -> imaplib.IMAP4_SSL:
     """Connect to the email server and log in."""
@@ -210,6 +210,46 @@ def write_extracted_files(zip_path: str, extract_dir: str, message_id: str, emai
     os.remove(zip_path)
     logger.info(f"Deleted the ZIP file: {zip_path}")
 
+    # Extract date range from filename and commit changes
+    date_range = extract_date_range_from_filename(zip_path)
+    commit_changes_to_repo(extract_dir, date_range, os.path.basename(__file__))
+
+def extract_date_range_from_filename(zip_path: str) -> str:
+    """Extract the date range from the ZIP filename."""
+    filename = os.path.basename(zip_path)
+    date_range = filename.split("File-Export-")[-1].split(".zip")[0]
+    return date_range
+
+def commit_changes_to_repo(repo_dir: str, date_range: str, script_name: str):
+    """Commit any changes in the dogsheep-data repository."""
+    try:
+        repo = Repo(repo_dir, search_parent_directories=True)
+
+        # Add all changes
+        repo.git.add(A=True)
+
+        # Get Git repository info
+        git_info = get_git_info()
+        commit_message = (
+            f"MyFitnessPal Export: {date_range}\n"
+            f"Script: {script_name}\n"
+            f"Repository: {git_info['repository']}\n"
+            f"Commit hash: {git_info['commit_hash']}\n"
+            f"Uncommitted changes: {git_info['uncommitted_changes']}"
+        )
+
+        # Commit the changes
+        repo.index.commit(commit_message)
+
+        # Push the changes
+        origin = repo.remote(name='origin')
+        origin.push()
+        logger.info(f"Committed and pushed changes for MyFitnessPal Export {date_range}")
+    except InvalidGitRepositoryError:
+        logger.error("Not a valid Git repository. Cannot commit changes.")
+    except Exception as e:
+        logger.error(f"Failed to commit changes: {e}")
+
 def format_date_for_folder(date_str: str) -> str:
     """Format the email date string for use in a folder name."""
     date_obj = email.utils.parsedate_to_datetime(date_str)
@@ -218,7 +258,9 @@ def format_date_for_folder(date_str: str) -> str:
 def main():
     """Main function to run the email processing."""
     logger.info("Starting the email processing script")
+    script_name = os.path.basename(__file__)
     mail = connect_to_email()
+    
     try:
         messages = search_emails(mail)
         for mail_id in messages:
