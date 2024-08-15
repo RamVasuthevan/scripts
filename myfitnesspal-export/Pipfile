@@ -8,6 +8,7 @@ python-dotenv = "*"
 beautifulsoup4 = "*"
 lxml = "*"
 requests = "*"
+gitpython = "*"
 
 [dev-packages]
 

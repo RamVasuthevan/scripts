@@ -9,6 +9,9 @@ import logging
 import requests
 from urllib.parse import urlparse, unquote
 import zipfile
+import json
+from datetime import datetime
+from git import Repo, InvalidGitRepositoryError
 
 # Configure logging to write only to a file
 logging.basicConfig(
@@ -49,7 +52,7 @@ def search_emails(mail: imaplib.IMAP4_SSL) -> List[bytes]:
     logger.info(f"Search completed. Number of emails found: {len(messages[0].split())}")
     return messages[0].split()
 
-def fetch_and_process_email(mail: imaplib.IMAP4_SSL, mail_id: bytes) -> Optional[Tuple[str, str]]:
+def fetch_and_process_email(mail: imaplib.IMAP4_SSL, mail_id: bytes) -> Optional[Tuple[str, str, Message]]:
     """Fetch an email by ID and process it."""
     logger.info(f"Fetching email with ID: {mail_id.decode()}")
     status, msg_data = mail.fetch(mail_id, '(RFC822)')
@@ -62,52 +65,39 @@ def fetch_and_process_email(mail: imaplib.IMAP4_SSL, mail_id: bytes) -> Optional
 
             if msg.is_multipart():
                 logger.info(f"{message_id} - {date}: Processing multipart email")
-                return process_multipart_email(msg)
+                link = process_multipart_email(msg)
             else:
                 logger.info(f"{message_id} - {date}: Processing singlepart email")
-                return process_singlepart_email(msg)
+                link = process_singlepart_email(msg)
+
+            if link:
+                return message_id, link, msg
 
     return None
 
-def process_multipart_email(msg: Message) -> Optional[Tuple[str, str]]:
+def process_multipart_email(msg: Message) -> Optional[str]:
     """Process a multipart email and extract the download link."""
-    message_id: str = msg.get('Message-ID')
-    date: str = msg.get('Date')
-    logger.info(f"{message_id} - {date}: Walking through the parts of a multipart email")
     for part in msg.walk():
         if part.get_content_type() == 'text/html':
-            logger.info(f"{message_id} - {date}: Processing HTML content part")
             html_content: str = part.get_payload(decode=True).decode()
-            return extract_and_return_link(html_content, message_id)
-
+            return extract_and_return_link(html_content)
     return None
 
-def process_singlepart_email(msg: Message) -> Optional[Tuple[str, str]]:
+def process_singlepart_email(msg: Message) -> Optional[str]:
     """Process a single-part email and extract the download link."""
-    message_id: str = msg.get('Message-ID')
-    date: str = msg.get('Date')
-    logger.info(f"{message_id} - {date}: Processing singlepart email content")
     if msg.get_content_type() == 'text/html':
         html_content: str = msg.get_payload(decode=True).decode()
-        return extract_and_return_link(html_content, message_id)
-
+        return extract_and_return_link(html_content)
     return None
 
-def extract_and_return_link(html_content: str, message_id: str) -> Optional[Tuple[str, str]]:
-    """Extract and return the download link and the email's Message-ID."""
-    logger.info(f"{message_id}: Extracting download link from the HTML content")
+def extract_and_return_link(html_content: str) -> Optional[str]:
+    """Extract and return the download link from the HTML content."""
     soup = BeautifulSoup(html_content, 'lxml')
     body_div = soup.find('div', class_='mfp-default--body')
     if body_div:
         download_link = body_div.find('a', string='Download Files')
         if download_link:
-            logger.info(f"{message_id}: Download link found")
-            return message_id, download_link['href']
-        else:
-            logger.warning(f"{message_id}: Download link not found")
-    else:
-        logger.warning(f"{message_id}: Body div not found in the HTML content")
-
+            return download_link['href']
     return None
 
 def get_filename_from_content_disposition(headers) -> Optional[str]:
@@ -127,10 +117,15 @@ def get_filename_from_url(url: str) -> str:
     filename = os.path.basename(parsed_url.path)
     return unquote(filename)  # Decodes URL-encoded characters
 
-def download_and_extract_file(url: str, save_dir: str):
-    """Download a file from the given URL, save it, extract its contents into a folder with the same name, and delete the ZIP file."""
+def download_file(url: str, save_dir: str) -> Optional[str]:
+    """Download a file from the given URL and return the path where it was saved."""
     logger.info(f"Starting download from {url}")
     response = requests.get(url, stream=True)
+    
+    if response.status_code == 403 and "Request has expired" in response.text:
+        logger.warning(f"Download link has expired: {url}")
+        return None
+
     if response.status_code == 200:
         # Attempt to get the filename from the Content-Disposition header
         filename: Optional[str] = get_filename_from_content_disposition(response.headers)
@@ -151,19 +146,65 @@ def download_and_extract_file(url: str, save_dir: str):
                     file.write(chunk)
         logger.info(f"File downloaded and saved as {save_path}")
 
-        # Extract the contents of the ZIP file into a directory named after the ZIP file
-        extract_dir = os.path.join(save_dir, os.path.splitext(filename)[0])
-        os.makedirs(extract_dir, exist_ok=True)
-        with zipfile.ZipFile(save_path, 'r') as zip_ref:
-            zip_ref.extractall(extract_dir)
-            logger.info(f"Extracted contents of {save_path} to {extract_dir}")
-
-        # Delete the ZIP file
-        os.remove(save_path)
-        logger.info(f"Deleted the ZIP file: {save_path}")
-
+        return save_path
     else:
         logger.error(f"Failed to download file from {url}. Status code: {response.status_code}")
+        return None
+
+def get_git_info() -> dict:
+    """Get Git repository information including commit hash and uncommitted changes."""
+    try:
+        repo = Repo(os.path.dirname(__file__), search_parent_directories=True)
+        
+        # Get the current commit hash
+        commit_hash = repo.head.commit.hexsha
+        
+        # Check if there are uncommitted changes
+        uncommitted_changes = repo.is_dirty(untracked_files=True)
+        
+        # Get the remote origin URL (i.e., the repository URL)
+        repo_url = next(repo.remote().urls)
+        
+        return {
+            "repository": repo_url,
+            "commit_hash": commit_hash,
+            "uncommitted_changes": uncommitted_changes,
+        }
+    except InvalidGitRepositoryError:
+        logger.error("Not a valid Git repository.")
+        return {
+            "repository": None,
+            "commit_hash": None,
+            "uncommitted_changes": None,
+        }
+
+def write_extracted_files(zip_path: str, extract_dir: str, message_id: str):
+    """Extract the ZIP file, write metadata about the email, and delete the ZIP file."""
+    # Ensure the extract directory exists
+    os.makedirs(extract_dir, exist_ok=True)
+
+    # Extract the contents of the ZIP file
+    with zipfile.ZipFile(zip_path, 'r') as zip_ref:
+        zip_ref.extractall(extract_dir)
+        logger.info(f"Extracted contents of {zip_path} to {extract_dir}")
+
+    # Write metadata about the email
+    git_info = get_git_info()
+    metadata = {
+        "message_id": message_id,
+        "extracted_on": datetime.now().isoformat(),
+        "git_repository": git_info.get("repository"),
+        "git_commit_hash": git_info.get("commit_hash"),
+        "uncommitted_changes": git_info.get("uncommitted_changes"),
+    }
+    metadata_path = os.path.join(extract_dir, "metadata.json")
+    with open(metadata_path, 'w') as metadata_file:
+        json.dump(metadata, metadata_file, indent=4)
+    logger.info(f"Wrote metadata to {metadata_path}")
+
+    # Delete the ZIP file
+    os.remove(zip_path)
+    logger.info(f"Deleted the ZIP file: {zip_path}")
 
 def main():
     """Main function to run the email processing."""
@@ -174,10 +215,16 @@ def main():
         for mail_id in messages:
             result = fetch_and_process_email(mail, mail_id)
             if result:
-                message_id, download_link = result
+                message_id, download_link, _ = result  # Unused email message removed
                 logger.info(f"{message_id}: Download link: {download_link}")
-                # Download the file, extract it into a folder named after the ZIP file, and delete the ZIP file
-                download_and_extract_file(download_link, save_dir=SAVE_DIR)
+                # Download the file
+                zip_path = download_file(download_link, save_dir=SAVE_DIR)
+                if zip_path:
+                    # Set the extraction directory and write metadata
+                    extract_dir = os.path.join(SAVE_DIR, f"{os.path.splitext(os.path.basename(zip_path))[0]}_{message_id}")
+                    write_extracted_files(zip_path, extract_dir, message_id)
+                else:
+                    logger.warning(f"{message_id}: Skipping processing due to expired download link.")
     finally:
         logger.info("Logging out from the email server")
         mail.logout()
