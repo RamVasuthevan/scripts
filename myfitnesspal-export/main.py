@@ -178,7 +178,7 @@ def get_git_info() -> dict:
             "uncommitted_changes": None,
         }
 
-def write_extracted_files(zip_path: str, extract_dir: str, message_id: str):
+def write_extracted_files(zip_path: str, extract_dir: str, message_id: str, email_message: Message):
     """Extract the ZIP file, write metadata about the email, and delete the ZIP file."""
     # Ensure the extract directory exists
     os.makedirs(extract_dir, exist_ok=True)
@@ -192,6 +192,10 @@ def write_extracted_files(zip_path: str, extract_dir: str, message_id: str):
     git_info = get_git_info()
     metadata = {
         "message_id": message_id,
+        "subject": email_message.get("Subject"),
+        "from": email_message.get("From"),
+        "date": email_message.get("Date"),
+        "to": email_message.get("To"),
         "extracted_on": datetime.now().isoformat(),
         "git_repository": git_info.get("repository"),
         "git_commit_hash": git_info.get("commit_hash"),
@@ -206,6 +210,11 @@ def write_extracted_files(zip_path: str, extract_dir: str, message_id: str):
     os.remove(zip_path)
     logger.info(f"Deleted the ZIP file: {zip_path}")
 
+def format_date_for_folder(date_str: str) -> str:
+    """Format the email date string for use in a folder name."""
+    date_obj = email.utils.parsedate_to_datetime(date_str)
+    return date_obj.strftime('%Y%m%d_%H%M%S')
+
 def main():
     """Main function to run the email processing."""
     logger.info("Starting the email processing script")
@@ -215,14 +224,16 @@ def main():
         for mail_id in messages:
             result = fetch_and_process_email(mail, mail_id)
             if result:
-                message_id, download_link, _ = result  # Unused email message removed
+                message_id, download_link, email_message = result
                 logger.info(f"{message_id}: Download link: {download_link}")
+                # Format the date for the folder name
+                formatted_date = format_date_for_folder(email_message.get("Date"))
                 # Download the file
                 zip_path = download_file(download_link, save_dir=SAVE_DIR)
                 if zip_path:
                     # Set the extraction directory and write metadata
-                    extract_dir = os.path.join(SAVE_DIR, f"{os.path.splitext(os.path.basename(zip_path))[0]}_{message_id}")
-                    write_extracted_files(zip_path, extract_dir, message_id)
+                    extract_dir = os.path.join(SAVE_DIR, f"{formatted_date}_{os.path.splitext(os.path.basename(zip_path))[0]}_{message_id}")
+                    write_extracted_files(zip_path, extract_dir, message_id, email_message)
                 else:
                     logger.warning(f"{message_id}: Skipping processing due to expired download link.")
     finally:
