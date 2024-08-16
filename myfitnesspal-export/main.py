@@ -15,8 +15,10 @@ from git import Repo, InvalidGitRepositoryError
 
 # Magic variables
 SAVE_DIR: str = "dogsheep-data/myfitnesspal-export"
+
 FROM_ADDRESS: str = "no-reply@myfitnesspal.com"
 SUBJECT: str = "Your MyFitnessPal Export"
+
 IMAP_PORT: int = 993
 LOG_FILE: str = "email_processing.log"
 
@@ -45,37 +47,35 @@ def connect_to_email() -> imaplib.IMAP4_SSL:
     logger.info("Connected and logged in to the email server")
     return mail
 
-def search_emails(mail: imaplib.IMAP4_SSL, from_address: str, subject: str) -> List[bytes]:
-    """Search for emails from a specific sender with a specific subject."""
-    logger.info(f"Searching emails from '{from_address}' with subject '{subject}'")
+def search_and_fetch_emails(mail: imaplib.IMAP4_SSL, from_address: str, subject: str) -> List[Tuple[str, str, Message]]:
+    """Search for emails from a specific sender with a specific subject and process them."""
+    logger.info(f"Searching and fetching emails from '{from_address}' with subject '{subject}'")
     mail.select('inbox', readonly=True)
     search_criteria = f'(FROM "{from_address}" SUBJECT "{subject}")'
     status, messages = mail.search(None, search_criteria)
-    logger.info(f"Search completed. Number of emails found: {len(messages[0].split())}")
-    return messages[0].split()
+    email_ids = messages[0].split()
+    logger.info(f"Search completed. Number of emails found: {len(email_ids)}")
 
-def fetch_and_process_email(mail: imaplib.IMAP4_SSL, mail_id: bytes) -> Optional[Tuple[str, str, Message]]:
-    """Fetch an email by ID and process it."""
-    logger.info(f"Fetching email with ID: {mail_id.decode()}")
-    status, msg_data = mail.fetch(mail_id, '(RFC822)')
+    emails = []
+    for mail_id in email_ids:
+        status, msg_data = mail.fetch(mail_id, '(RFC822)')
+        for response_part in msg_data:
+            if isinstance(response_part, tuple):
+                msg = email.message_from_bytes(response_part[1])
+                message_id: str = msg.get('Message-ID')
+                date: str = msg.get('Date')
 
-    for response_part in msg_data:
-        if isinstance(response_part, tuple):
-            msg = email.message_from_bytes(response_part[1])
-            message_id: str = msg.get('Message-ID')
-            date: str = msg.get('Date')
+                if msg.is_multipart():
+                    logger.info(f"{message_id} - {date}: Processing multipart email")
+                    link = process_multipart_email(msg)
+                else:
+                    logger.info(f"{message_id} - {date}: Processing singlepart email")
+                    link = process_singlepart_email(msg)
 
-            if msg.is_multipart():
-                logger.info(f"{message_id} - {date}: Processing multipart email")
-                link = process_multipart_email(msg)
-            else:
-                logger.info(f"{message_id} - {date}: Processing singlepart email")
-                link = process_singlepart_email(msg)
+                if link:
+                    emails.append((message_id, link, msg))
 
-            if link:
-                return message_id, link, msg
-
-    return None
+    return emails
 
 def process_multipart_email(msg: Message) -> Optional[str]:
     """Process a multipart email and extract the download link."""
@@ -257,27 +257,28 @@ def format_date_for_folder(date_str: str) -> str:
     date_obj = email.utils.parsedate_to_datetime(date_str)
     return date_obj.strftime('%Y%m%d_%H%M%S')
 
+def process_emails(mail: imaplib.IMAP4_SSL):
+    """Process all relevant emails."""
+    emails = search_and_fetch_emails(mail, FROM_ADDRESS, SUBJECT)
+    for message_id, download_link, email_message in emails:
+        logger.info(f"{message_id}: Download link: {download_link}")
+        # Format the date for the folder name
+        formatted_date = format_date_for_folder(email_message.get("Date"))
+        # Download the file
+        zip_path = download_file(download_link, save_dir=SAVE_DIR)
+        if zip_path:
+            # Set the extraction directory and write metadata
+            extract_dir = os.path.join(SAVE_DIR, f"{formatted_date}_{os.path.splitext(os.path.basename(zip_path))[0]}_{message_id}")
+            write_extracted_files(zip_path, extract_dir, message_id, email_message)
+        else:
+            logger.warning(f"{message_id}: Skipping processing due to expired download link.")
+
 def main():
     logger.info("Starting the email processing script")
     mail = connect_to_email()
     
     try:
-        messages = search_emails(mail, FROM_ADDRESS, SUBJECT)
-        for mail_id in messages:
-            result = fetch_and_process_email(mail, mail_id)
-            if result:
-                message_id, download_link, email_message = result
-                logger.info(f"{message_id}: Download link: {download_link}")
-                # Format the date for the folder name
-                formatted_date = format_date_for_folder(email_message.get("Date"))
-                # Download the file
-                zip_path = download_file(download_link, save_dir=SAVE_DIR)
-                if zip_path:
-                    # Set the extraction directory and write metadata
-                    extract_dir = os.path.join(SAVE_DIR, f"{formatted_date}_{os.path.splitext(os.path.basename(zip_path))[0]}_{message_id}")
-                    write_extracted_files(zip_path, extract_dir, message_id, email_message)
-                else:
-                    logger.warning(f"{message_id}: Skipping processing due to expired download link.")
+        process_emails(mail)
     finally:
         logger.info("Logging out from the email server")
         mail.logout()
