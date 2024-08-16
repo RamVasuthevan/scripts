@@ -13,19 +13,23 @@ import json
 from datetime import datetime
 from git import Repo, InvalidGitRepositoryError
 
+# Magic variables
+SAVE_DIR: str = "dogsheep-data/myfitnesspal-export"
+FROM_ADDRESS: str = "no-reply@myfitnesspal.com"
+SUBJECT: str = "Your MyFitnessPal Export"
+IMAP_PORT: int = 993
+LOG_FILE: str = "email_processing.log"
+
 # Configure logging to write only to a file
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s - %(name)s - %(filename)s (%(lineno)d) - %(levelname)s - %(message)s",
     handlers=[
-        logging.FileHandler("email_processing.log")
+        logging.FileHandler(LOG_FILE)
     ]
 )
 
 logger = logging.getLogger(__name__)
-
-# Magic variable for the directory to save downloaded files
-SAVE_DIR: str = "dogsheep-data/myfitnesspal-export"
 
 def connect_to_email() -> imaplib.IMAP4_SSL:
     """Connect to the email server and log in."""
@@ -36,7 +40,7 @@ def connect_to_email() -> imaplib.IMAP4_SSL:
     imap_url: str = os.getenv('IMAP_URL')
 
     logger.info("Connecting to the email server")
-    mail = imaplib.IMAP4_SSL(imap_url, 993)
+    mail = imaplib.IMAP4_SSL(imap_url, IMAP_PORT)
     mail.login(email_user, email_password)
     logger.info("Connected and logged in to the email server")
     return mail
@@ -258,9 +262,7 @@ def main():
     mail = connect_to_email()
     
     try:
-        from_address = "no-reply@myfitnesspal.com"
-        subject = "Your MyFitnessPal Export"
-        messages = search_emails(mail, from_address, subject)
+        messages = search_emails(mail, FROM_ADDRESS, SUBJECT)
         for mail_id in messages:
             result = fetch_and_process_email(mail, mail_id)
             if result:
@@ -279,3 +281,6 @@ def main():
     finally:
         logger.info("Logging out from the email server")
         mail.logout()
+
+if __name__ == "__main__":
+    main()
