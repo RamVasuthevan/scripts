@@ -41,14 +41,12 @@ def connect_to_email() -> imaplib.IMAP4_SSL:
     logger.info("Connected and logged in to the email server")
     return mail
 
-def search_emails(mail: imaplib.IMAP4_SSL) -> List[bytes]:
-    """Search for emails with specific subject and sender."""
-    logger.info("Selecting the inbox for searching")
+def search_emails(mail: imaplib.IMAP4_SSL, from_address: str, subject: str) -> List[bytes]:
+    """Search for emails from a specific sender with a specific subject."""
+    logger.info(f"Searching emails from '{from_address}' with subject '{subject}'")
     mail.select('inbox', readonly=True)
-    status, messages = mail.search(
-        None,
-        '(FROM "no-reply@myfitnesspal.com" SUBJECT "Your MyFitnessPal Export")'
-    )
+    search_criteria = f'(FROM "{from_address}" SUBJECT "{subject}")'
+    status, messages = mail.search(None, search_criteria)
     logger.info(f"Search completed. Number of emails found: {len(messages[0].split())}")
     return messages[0].split()
 
@@ -256,13 +254,13 @@ def format_date_for_folder(date_str: str) -> str:
     return date_obj.strftime('%Y%m%d_%H%M%S')
 
 def main():
-    """Main function to run the email processing."""
     logger.info("Starting the email processing script")
-    script_name = os.path.basename(__file__)
     mail = connect_to_email()
     
     try:
-        messages = search_emails(mail)
+        from_address = "no-reply@myfitnesspal.com"
+        subject = "Your MyFitnessPal Export"
+        messages = search_emails(mail, from_address, subject)
         for mail_id in messages:
             result = fetch_and_process_email(mail, mail_id)
             if result:
@@ -281,6 +279,3 @@ def main():
     finally:
         logger.info("Logging out from the email server")
         mail.logout()
-
-if __name__ == "__main__":
-    main()
