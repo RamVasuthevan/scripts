@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Single-Page with Columns</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f4f4f4;
+        }
+        .container {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr 2fr 1fr auto;
+            gap: 10px;
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        .container div {
+            padding: 10px;
+            background-color: #ffffff; /* White background */
+            color: #000000; /* Black text */
+            border-radius: 4px;
+            cursor: pointer;
+            border: 1px solid #e2e8f0; /* Light border */
+        }
+        .container div a {
+            color: #007bff; /* Link color */
+            text-decoration: none;
+        }
+        .container div a:hover {
+            text-decoration: underline;
+        }
+        .header {
+            font-weight: bold;
+            background-color: #007bff;
+            color: white;
+            text-align: center;
+            cursor: default;
+            border: none;
+        }
+        .button-container {
+            margin-top: 20px;
+        }
+        .add-row-btn, .copy-json-btn {
+            padding: 10px 15px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-right: 10px;
+        }
+        .add-row-btn:hover, .copy-json-btn:hover {
+            background-color: #0056b3;
+        }
+        .delete-btn {
+            padding: 5px 10px;
+            background-color: #dc3545;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .delete-btn:hover {
+            background-color: #c82333;
+        }
+        .tag-pill {
+            display: inline-block;
+            padding: 5px 10px;
+            margin: 2px;
+            background-color: #e0e0e0;
+            color: #333;
+            border-radius: 15px;
+            font-size: 12px;
+            cursor: default;
+        }
+        .tag-input {
+            display: inline-block;
+            padding: 5px 10px;
+            margin: 2px;
+            border: none;
+            outline: none;
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container" id="gridContainer">
+        <div class="header">URL</div>
+        <div class="header">Author</div>
+        <div class="header">Title</div>
+        <div class="header">Notes</div>
+        <div class="header">Tags</div>
+        <div class="header">Actions</div>
+    </div>
+
+    <div class="button-container">
+        <button class="add-row-btn" onclick="addRow()">Add Row</button>
+        <button class="copy-json-btn" onclick="copyJSON()">Copy JSON</button>
+    </div>
+
+    <script>
+        // Function to load JSON data and populate the grid
+        async function loadJSON() {
+            const response = await fetch('data.json'); // Ensure the JSON file is in the same directory or provide the correct path
+            const data = await response.json();
+            data.forEach(item => {
+                addRow(item);
+            });
+        }
+
+        // Function to add a new row
+        function addRow(data = { url: '', author: '', title: '', notes: '', tags: [] }) {
+            const container = document.querySelector('.container');
+
+            const urlDiv = document.createElement('div');
+            const authorDiv = document.createElement('div');
+            const titleDiv = document.createElement('div');
+            const notesDiv = document.createElement('div');
+            const tagsDiv = document.createElement('div');
+            const actionsDiv = document.createElement('div');
+
+            urlDiv.textContent = data.url;
+            authorDiv.textContent = data.author;
+            titleDiv.textContent = data.title;
+            notesDiv.textContent = data.notes;
+
+            // Create tag pills
+            data.tags.forEach(tag => {
+                const tagPill = document.createElement('span');
+                tagPill.className = 'tag-pill';
+                tagPill.textContent = tag;
+                tagsDiv.appendChild(tagPill);
+            });
+
+            actionsDiv.innerHTML = '<button class="delete-btn" onclick="deleteRow(this)">Delete</button>';
+
+            container.appendChild(urlDiv);
+            container.appendChild(authorDiv);
+            container.appendChild(titleDiv);
+            container.appendChild(notesDiv);
+            container.appendChild(tagsDiv);
+            container.appendChild(actionsDiv);
+        }
+
+        // Function to enable in-place editing
+        function enableEditing(event) {
+            const target = event.target;
+
+            // Prevent editing on header cells or delete buttons
+            if (target.classList.contains('header') || target.tagName.toLowerCase() === 'button') {
+                return;
+            }
+
+            // Handle tag editing
+            if (target.classList.contains('tag-pill') || target.parentElement.classList.contains('container')) {
+                const tagsDiv = target.parentElement;
+                const tagList = Array.from(tagsDiv.children).map(tag => tag.textContent.trim()).filter(tag => tag !== '');
+                const input = document.createElement('input');
+                input.type = 'text';
+                input.className = 'tag-input';
+                input.value = tagList.join(', ');
+
+                tagsDiv.innerHTML = '';
+                tagsDiv.appendChild(input);
+                input.focus();
+
+                input.addEventListener('blur', function() {
+                    const newTags = input.value.split(',').map(tag => tag.trim()).filter(tag => tag !== '');
+                    tagsDiv.innerHTML = '';
+                    newTags.forEach(tag => {
+                        const tagPill = document.createElement('span');
+                        tagPill.className = 'tag-pill';
+                        tagPill.textContent = tag;
+                        tagsDiv.appendChild(tagPill);
+                    });
+                });
+
+                input.addEventListener('keypress', function(e) {
+                    if (e.key === 'Enter') {
+                        input.blur();
+                    }
+                });
+                return;
+            }
+
+            // Handle other content editing
+            const initialValue = target.textContent.trim();
+            const input = document.createElement('input');
+            input.type = 'text';
+            input.value = initialValue;
+            target.innerHTML = '';
+            target.appendChild(input);
+            input.focus();
+
+            input.addEventListener('blur', function() {
+                target.textContent = input.value.trim() || initialValue;
+            });
+
+            input.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    input.blur();
+                }
+            });
+        }
+
+        // Function to delete a row
+        function deleteRow(button) {
+            const container = document.getElementById('gridContainer');
+            const allCells = Array.from(container.children);
+            const index = allCells.indexOf(button.parentElement);
+            const columns = 6; // Total number of columns (URL, Author, Title, Notes, Tags, Actions)
+
+            for (let i = 0; i < columns; i++) {
+                container.removeChild(allCells[index - i]);
+            }
+        }
+
+        // Function to copy the JSON data
+        function copyJSON() {
+            const container = document.getElementById('gridContainer');
+            const allCells = Array.from(container.children);
+            const columns = 6; // Total number of columns (URL, Author, Title, Notes, Tags, Actions)
+            const data = [];
+
+            for (let i = columns; i < allCells.length; i += columns) { // Skip headers
+                const tagsDiv = allCells[i + 4];
+                const tags = Array.from(tagsDiv.children).map(tag => tag.textContent.trim());
+
+                data.push({
+                    url: allCells[i].textContent, // Capture the text content for URL
+                    author: allCells[i + 1].textContent,
+                    title: allCells[i + 2].textContent,
+                    notes: allCells[i + 3].textContent,
+                    tags: tags
+                });
+            }
+
+            const jsonString = JSON.stringify(data, null, 2);
+
+            // Copy to clipboard
+            const tempTextArea = document.createElement('textarea');
+            tempTextArea.value = jsonString;
+            document.body.appendChild(tempTextArea);
+            tempTextArea.select();
+            document.execCommand('copy');
+            document.body.removeChild(tempTextArea);
+
+            // Change button text to indicate success
+            const copyButton = document.querySelector('.copy-json-btn');
+            copyButton.textContent = 'Copied!';
+            setTimeout(() => {
+                copyButton.textContent = 'Copy JSON';
+            }, 2000); // Reset button text after 2 seconds
+        }
+
+        // Add double-click event listener to all cells for editing
+        document.getElementById('gridContainer').addEventListener('dblclick', enableEditing);
+
+        // Load the JSON data when the page loads
+        window.onload = loadJSON;
+    </script>
+
+</body>
+</html>
