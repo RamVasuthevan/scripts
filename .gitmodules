@@ -1,5 +1,0 @@
-[submodule "myfitnesspal-export/dogsheep-data"]
-	path = myfitnesspal-export/dogsheep-data
-	url = https://github.com/RamVasuthevan/dogsheep-data.git
-	branch = test-myfitnesspal-export
-
