@@ -49,6 +49,7 @@ const MyFitnessPalDashboard = () => {
   const [nutritionData, setNutritionData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [yAxisDomain, setYAxisDomain] = useState([0, 'auto']);
 
   const today = new Date();
   const thirtyDaysAgo = new Date(today.getTime() - (30 * 24 * 60 * 60 * 1000));
@@ -119,6 +120,15 @@ const MyFitnessPalDashboard = () => {
     }
 
     setFilteredMeasurementData(filteredData);
+
+    // Calculate the new Y-axis domain
+    const weights = filteredData.map(item => item.Weight);
+    const minWeight = Math.min(...weights);
+    const maxWeight = Math.max(...weights);
+    const yMin = Math.floor(minWeight / 5) * 5; // Round down to nearest 5
+    const yMax = Math.ceil(maxWeight / 5) * 5; // Round up to nearest 5
+    setYAxisDomain([yMin, yMax]);
+
     setError(null);
   };
 
@@ -146,13 +156,27 @@ const MyFitnessPalDashboard = () => {
               <CartesianGrid strokeDasharray="3 3" />
               <XAxis 
                 dataKey="Date" 
-                tickFormatter={(date) => date.toLocaleDateString()}
+                tickFormatter={(date) => formatDate(date)}
+                angle={-45}
+                textAnchor="end"
+                height={70}
               />
-              <YAxis />
+              <YAxis 
+                domain={yAxisDomain}
+                tickCount={10}
+                tickFormatter={(value) => `${value.toFixed(1)}`}
+              />
               <Tooltip 
-                labelFormatter={(label) => new Date(label).toLocaleDateString()}
+                labelFormatter={(label) => formatDate(new Date(label))}
+                formatter={(value) => [`${value.toFixed(1)} lbs`, 'Weight']}
               />
-              <Line type="monotone" dataKey="Weight" stroke="#8884d8" />
+              <Line 
+                type="monotone" 
+                dataKey="Weight" 
+                stroke="#8884d8" 
+                dot={false}
+                activeDot={{ r: 8 }}
+              />
             </LineChart>
           </ResponsiveContainer>
         </CardContent>
@@ -178,7 +202,7 @@ const MyFitnessPalDashboard = () => {
               <tbody>
                 {nutritionData.slice(0, 10).map((nutrition, index) => (
                   <tr key={index} className={index % 2 === 0 ? 'bg-gray-100' : ''}>
-                    <td className="px-4 py-2">{nutrition.Date}</td>
+                    <td className="px-4 py-2">{formatDate(new Date(nutrition.Date))}</td>
                     <td className="px-4 py-2">{nutrition.Meal}</td>
                     <td className="px-4 py-2">{nutrition.Calories}</td>
                     <td className="px-4 py-2">{nutrition['Fat (g)']}</td>
