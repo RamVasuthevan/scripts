@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import Papa from 'papaparse';
 import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
@@ -11,13 +11,13 @@ const DateRangeSelector = ({ onUpdate, initialStartDate, initialEndDate }) => {
   const [startDate, setStartDate] = useState(formatDate(initialStartDate));
   const [endDate, setEndDate] = useState(formatDate(initialEndDate));
 
-  const handleUpdate = () => {
+  const handleUpdate = useCallback(() => {
     onUpdate(new Date(startDate), new Date(endDate));
-  };
+  }, [onUpdate, startDate, endDate]);
 
   useEffect(() => {
     handleUpdate();
-  }, []);
+  }, [handleUpdate]);
 
   return (
     <div className="mb-4">
@@ -51,14 +51,38 @@ const MyFitnessPalDashboard = () => {
   const [error, setError] = useState(null);
   const [yAxisDomain, setYAxisDomain] = useState([0, 'auto']);
 
-  const today = new Date();
-  const thirtyDaysAgo = new Date(today.getTime() - (30 * 24 * 60 * 60 * 1000));
+  const today = useMemo(() => new Date(), []);
+  const thirtyDaysAgo = useMemo(() => new Date(today.getTime() - (30 * 24 * 60 * 60 * 1000)), [today]);
 
-  useEffect(() => {
-    fetchData();
+  const updateChart = useCallback((startDate, endDate, data) => {
+    if (startDate > endDate) {
+      setError('Start date must be before end date');
+      return;
+    }
+
+    const filteredData = data.filter(item => 
+      item.Date >= startDate && item.Date <= endDate
+    );
+
+    if (filteredData.length === 0) {
+      setError('No data available for the selected date range');
+      return;
+    }
+
+    setFilteredMeasurementData(filteredData);
+
+    // Calculate the new Y-axis domain
+    const weights = filteredData.map(item => item.Weight);
+    const minWeight = Math.min(...weights);
+    const maxWeight = Math.max(...weights);
+    const yMin = Math.floor(minWeight / 5) * 5; // Round down to nearest 5
+    const yMax = Math.ceil(maxWeight / 5) * 5; // Round up to nearest 5
+    setYAxisDomain([yMin, yMax]);
+
+    setError(null);
   }, []);
 
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     try {
       const [measurementResponse, nutritionResponse] = await Promise.all([
         fetch('/Measurement-Summary-2020-12-29-to-2024-08-17.csv'),
@@ -80,7 +104,7 @@ const MyFitnessPalDashboard = () => {
             }))
             .sort((a, b) => a.Date - b.Date);
           setMeasurementData(parsedData);
-          updateChart(thirtyDaysAgo, today);
+          updateChart(thirtyDaysAgo, today, parsedData);
         },
         error: (error) => {
           setError('Error parsing Measurement CSV: ' + error.message);
@@ -102,35 +126,15 @@ const MyFitnessPalDashboard = () => {
       setError('Error fetching data: ' + error.message);
       setLoading(false);
     }
-  };
+  }, [updateChart, thirtyDaysAgo, today]);
 
-  const updateChart = (startDate, endDate) => {
-    if (startDate > endDate) {
-      setError('Start date must be before end date');
-      return;
-    }
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
 
-    const filteredData = measurementData.filter(item => 
-      item.Date >= startDate && item.Date <= endDate
-    );
-
-    if (filteredData.length === 0) {
-      setError('No data available for the selected date range');
-      return;
-    }
-
-    setFilteredMeasurementData(filteredData);
-
-    // Calculate the new Y-axis domain
-    const weights = filteredData.map(item => item.Weight);
-    const minWeight = Math.min(...weights);
-    const maxWeight = Math.max(...weights);
-    const yMin = Math.floor(minWeight / 5) * 5; // Round down to nearest 5
-    const yMax = Math.ceil(maxWeight / 5) * 5; // Round up to nearest 5
-    setYAxisDomain([yMin, yMax]);
-
-    setError(null);
-  };
+  const handleDateRangeUpdate = useCallback((startDate, endDate) => {
+    updateChart(startDate, endDate, measurementData);
+  }, [updateChart, measurementData]);
 
   if (loading) return <div>Loading...</div>;
 
@@ -139,7 +143,7 @@ const MyFitnessPalDashboard = () => {
       <h1 className="text-2xl font-bold mb-4">MyFitnessPal Dashboard</h1>
       
       <DateRangeSelector 
-        onUpdate={updateChart} 
+        onUpdate={handleDateRangeUpdate} 
         initialStartDate={thirtyDaysAgo}
         initialEndDate={today}
       />
