@@ -12,15 +12,15 @@ import zipfile
 import json
 from datetime import datetime
 from git import Repo, InvalidGitRepositoryError
+import shutil
 
 # Magic variables
 SAVE_DIR: str = "dogsheep-data/myfitnesspal-export"
-
 FROM_ADDRESS: str = "no-reply@myfitnesspal.com"
 SUBJECT: str = "Your MyFitnessPal Export"
-
 IMAP_PORT: int = 993
 LOG_FILE: str = "email_processing.log"
+DOGSHEEP_REPO_URL: str = "https://github.com/RamVasuthevan/dogsheep-data.git"
 
 # Configure logging to write only to a file
 logging.basicConfig(
@@ -125,7 +125,7 @@ def download_file(url: str, save_dir: str) -> Optional[str]:
     response = requests.get(url, stream=True)
     
     if response.status_code == 403 and "Request has expired" in response.text:
-        logger.warning(f"Download link has expired: {url}")
+        logger.info(f"Download link has expired: {url}")
         return None
 
     if response.status_code == 200:
@@ -183,6 +183,15 @@ def get_script_info() -> dict:
             "uncommitted_changes": None,
         }
 
+def clone_dogsheep_data(branch: str) -> str:
+    """Clone the dogsheep-data repository to a temporary directory."""
+    repo_dir = "dogsheep-data"
+    if os.path.exists(repo_dir):
+        shutil.rmtree(repo_dir)
+    logger.info(f"Cloning dogsheep-data repository from branch '{branch}'")
+    Repo.clone_from(DOGSHEEP_REPO_URL, repo_dir, branch=branch)
+    return repo_dir
+
 def write_extracted_files(zip_path: str, extract_dir: str, message_id: str, email_message: Message):
     """Extract the ZIP file, write metadata about the email, and delete the ZIP file."""
     # Ensure the extract directory exists
@@ -215,53 +224,64 @@ def write_extracted_files(zip_path: str, extract_dir: str, message_id: str, emai
     os.remove(zip_path)
     logger.info(f"Deleted the ZIP file: {zip_path}")
 
-    # Extract date range from filename and commit changes
-    date_range = extract_date_range_from_filename(zip_path)
-    commit_changes_to_repo(extract_dir, date_range, os.path.basename(__file__))
-
 def extract_date_range_from_filename(zip_path: str) -> str:
     """Extract the date range from the ZIP filename."""
     filename = os.path.basename(zip_path)
     date_range = filename.split("File-Export-")[-1].split(".zip")[0]
     return date_range
 
-def commit_changes_to_repo(repo_dir: str, date_range: str, script_name: str):
-    """Commit any changes in the dogsheep-data repository."""
+import os
+from git import Repo, InvalidGitRepositoryError
+import logging
+
+logger = logging.getLogger(__name__)
+
+def commit_untracked_files_to_repo(repo_dir: str, script_name: str):
+    """Commit only untracked files in the dogsheep-data repository."""
     try:
-        repo = Repo(repo_dir, search_parent_directories=True)
+        repo = Repo(repo_dir)
 
-        # Add all changes
-        repo.git.add(A=True)
+        # Get a list of all untracked files in the extract_dir
+        untracked_files = repo.untracked_files
+        print(f"Untracked files: {untracked_files}")
 
-        # Get Git repository info
-        git_info = get_script_info()
-        commit_message = (
-            f"MyFitnessPal Export: {date_range}\n"
-            f"Script: {script_name}\n"
-            f"Repository: {git_info['repository']}\n"
-            f"Commit hash: {git_info['commit_hash']}\n"
-            f"Uncommitted changes: {git_info['uncommitted_changes']}"
-        )
+        if untracked_files:
+            # Stage only untracked files
+            repo.index.add(untracked_files)
+            logger.info(f"Staged untracked files: {untracked_files}")
 
-        # Commit the changes
-        repo.index.commit(commit_message)
+            git_info = get_script_info()
+            commit_message = (
+                f"MyFitnessPal Export\n"
+                f"Script: {script_name}\n"
+                f"Repository: {git_info['repository']}\n"
+                f"Commit hash: {git_info['commit_hash']}\n"
+                f"Uncommitted changes: {git_info['uncommitted_changes']}"
+            )
 
-        # Push the changes
-        origin = repo.remote(name='origin')
-        origin.push()
-        logger.info(f"Committed and pushed changes for MyFitnessPal Export {date_range}")
+            # Commit the changes
+            repo.index.commit(commit_message)
+            # Push the changes
+            origin = repo.remote(name='origin')
+            origin.push()
+            logger.info(f"Committed and pushed untracked files for MyFitnessPal Export")
+        else:
+            logger.info("No untracked files detected; skipping commit.")
     except InvalidGitRepositoryError:
         logger.error("Not a valid Git repository. Cannot commit changes.")
     except Exception as e:
-        logger.error(f"Failed to commit changes: {e}")
+        logger.error(f"Failed to commit untracked files: {e}")
+
+
 
 def format_date_for_folder(date_str: str) -> str:
     """Format the email date string for use in a folder name."""
     date_obj = email.utils.parsedate_to_datetime(date_str)
     return date_obj.strftime('%Y%m%d_%H%M%S')
 
-def process_emails(mail: imaplib.IMAP4_SSL):
+def process_emails(mail: imaplib.IMAP4_SSL, branch: str):
     """Process all relevant emails."""
+    repo_dir = clone_dogsheep_data(branch)
     emails = search_and_fetch_emails(mail, FROM_ADDRESS, SUBJECT)
     for message_id, download_link, email_message in emails:
         logger.info(f"{message_id}: Download link: {download_link}")
@@ -272,16 +292,20 @@ def process_emails(mail: imaplib.IMAP4_SSL):
         if zip_path:
             # Set the extraction directory and write metadata
             extract_dir = os.path.join(SAVE_DIR, f"{formatted_date}_{os.path.splitext(os.path.basename(zip_path))[0]}_{message_id}")
+
             write_extracted_files(zip_path, extract_dir, message_id, email_message)
         else:
             logger.warning(f"{message_id}: Skipping processing due to expired download link.")
+        
+    commit_untracked_files_to_repo(repo_dir, os.path.basename(__file__))
 
 def main():
     logger.info("Starting the email processing script")
+    branch = os.getenv("DOGSHEEP_BRANCH", "test-myfitnesspal-export")
     mail = connect_to_email()
     
     try:
-        process_emails(mail)
+        process_emails(mail, branch)
     finally:
         logger.info("Logging out from the email server")
         mail.logout()
