@@ -153,8 +153,11 @@ def download_file(url: str, save_dir: str) -> Optional[str]:
         logger.error(f"Failed to download file from {url}. Status code: {response.status_code}")
         return None
 
-def get_git_info() -> dict:
-    """Get Git repository information including commit hash and uncommitted changes."""
+def get_script_info() -> dict:
+    """
+    Retrieve information about the script's Git repository, including the commit hash,
+    repository URL, and whether there are any uncommitted changes.
+    """
     try:
         repo = Repo(os.path.dirname(__file__), search_parent_directories=True)
         
@@ -191,7 +194,7 @@ def write_extracted_files(zip_path: str, extract_dir: str, message_id: str, emai
         logger.info(f"Extracted contents of {zip_path} to {extract_dir}")
 
     # Write metadata about the email
-    git_info = get_git_info()
+    git_info = get_script_info()
     metadata = {
         "message_id": message_id,
         "subject": email_message.get("Subject"),
@@ -231,7 +234,7 @@ def commit_changes_to_repo(repo_dir: str, date_range: str, script_name: str):
         repo.git.add(A=True)
 
         # Get Git repository info
-        git_info = get_git_info()
+        git_info = get_script_info()
         commit_message = (
             f"MyFitnessPal Export: {date_range}\n"
             f"Script: {script_name}\n"
