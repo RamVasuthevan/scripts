@@ -156,14 +156,19 @@ const MyFitnessPalDashboard = () => {
         </CardHeader>
         <CardContent>
           <ResponsiveContainer width="100%" height={400}>
-            <LineChart data={filteredMeasurementData}>
+            <LineChart 
+              data={filteredMeasurementData}
+              margin={{ top: 5, right: 30, left: 20, bottom: 25 }}
+            >
               <CartesianGrid strokeDasharray="3 3" />
               <XAxis 
                 dataKey="Date" 
                 tickFormatter={(date) => formatDate(date)}
-                angle={-45}
-                textAnchor="end"
-                height={70}
+                angle={-45} // Angled labels
+                textAnchor="end" // Align text to the end
+                interval="preserveStartEnd" // Show first and last label, and space others evenly
+                tickMargin={10} // Add some margin to the ticks
+                height={70} // Increased height for labels
               />
               <YAxis 
                 domain={yAxisDomain}
