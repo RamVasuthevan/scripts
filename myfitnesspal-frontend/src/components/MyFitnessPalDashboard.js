@@ -47,12 +47,18 @@ const MyFitnessPalDashboard = () => {
   const [measurementData, setMeasurementData] = useState([]);
   const [filteredMeasurementData, setFilteredMeasurementData] = useState([]);
   const [nutritionData, setNutritionData] = useState([]);
+  const [filteredNutritionData, setFilteredNutritionData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [yAxisDomain, setYAxisDomain] = useState([0, 'auto']);
+  const [nutritionStartDate, setNutritionStartDate] = useState(formatDate(new Date()));
 
   const today = useMemo(() => new Date(), []);
-  const thirtyDaysAgo = useMemo(() => new Date(today.getTime() - (30 * 24 * 60 * 60 * 1000)), [today]);
+  const thirtyDaysAgo = useMemo(() => {
+    const date = new Date();
+    date.setDate(date.getDate() - 30);
+    return date;
+  }, []);
 
   const updateChart = useCallback((startDate, endDate, data) => {
     if (startDate > endDate) {
@@ -114,7 +120,14 @@ const MyFitnessPalDashboard = () => {
       Papa.parse(nutritionText, {
         header: true,
         complete: (results) => {
-          setNutritionData(results.data);
+          const parsedData = results.data
+            .map(item => ({
+              ...item,
+              Date: new Date(item.Date)
+            }))
+            .sort((a, b) => a.Date - b.Date); // Sort from oldest to newest
+          setNutritionData(parsedData);
+          filterNutritionData(parsedData, nutritionStartDate);
         },
         error: (error) => {
           setError('Error parsing Nutrition CSV: ' + error.message);
@@ -126,7 +139,7 @@ const MyFitnessPalDashboard = () => {
       setError('Error fetching data: ' + error.message);
       setLoading(false);
     }
-  }, [updateChart, thirtyDaysAgo, today]);
+  }, [updateChart, thirtyDaysAgo, today, nutritionStartDate]);
 
   useEffect(() => {
     fetchData();
@@ -135,6 +148,21 @@ const MyFitnessPalDashboard = () => {
   const handleDateRangeUpdate = useCallback((startDate, endDate) => {
     updateChart(startDate, endDate, measurementData);
   }, [updateChart, measurementData]);
+
+  const filterNutritionData = useCallback((data, startDate) => {
+    const filtered = data.filter(item => item.Date >= new Date(startDate));
+    setFilteredNutritionData(filtered);
+  }, []);
+
+  const handleNutritionStartDateChange = (e) => {
+    const newStartDate = e.target.value;
+    setNutritionStartDate(newStartDate);
+    filterNutritionData(nutritionData, newStartDate);
+  };
+
+  const roundValue = (value, decimals) => {
+    return Number(Math.round(parseFloat(value) + 'e' + decimals) + 'e-' + decimals).toFixed(decimals);
+  };
 
   if (loading) return <div>Loading...</div>;
 
@@ -158,17 +186,17 @@ const MyFitnessPalDashboard = () => {
           <ResponsiveContainer width="100%" height={400}>
             <LineChart 
               data={filteredMeasurementData}
-              margin={{ top: 5, right: 30, left: 20, bottom: 25 }}
+              margin={{ top: 5, right: 30, left: 20, bottom: 50 }}
             >
               <CartesianGrid strokeDasharray="3 3" />
               <XAxis 
                 dataKey="Date" 
                 tickFormatter={(date) => formatDate(date)}
-                angle={-45} // Angled labels
-                textAnchor="end" // Align text to the end
-                interval="preserveStartEnd" // Show first and last label, and space others evenly
-                tickMargin={10} // Add some margin to the ticks
-                height={70} // Increased height for labels
+                angle={-45}
+                textAnchor="end"
+                interval="preserveStartEnd"
+                tickMargin={10}
+                height={70}
               />
               <YAxis 
                 domain={yAxisDomain}
@@ -196,6 +224,16 @@ const MyFitnessPalDashboard = () => {
           <CardTitle>Nutrition Summary</CardTitle>
         </CardHeader>
         <CardContent>
+          <div className="mb-4">
+            <label htmlFor="nutritionStartDate" className="mr-2">Start Date:</label>
+            <input
+              type="date"
+              id="nutritionStartDate"
+              value={nutritionStartDate}
+              onChange={handleNutritionStartDateChange}
+              className="p-2 border rounded"
+            />
+          </div>
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead>
@@ -209,14 +247,14 @@ const MyFitnessPalDashboard = () => {
                 </tr>
               </thead>
               <tbody>
-                {nutritionData.slice(0, 10).map((nutrition, index) => (
+                {filteredNutritionData.map((nutrition, index) => (
                   <tr key={index} className={index % 2 === 0 ? 'bg-gray-100' : ''}>
-                    <td className="px-4 py-2">{formatDate(new Date(nutrition.Date))}</td>
+                    <td className="px-4 py-2">{formatDate(nutrition.Date)}</td>
                     <td className="px-4 py-2">{nutrition.Meal}</td>
-                    <td className="px-4 py-2">{nutrition.Calories}</td>
-                    <td className="px-4 py-2">{nutrition['Fat (g)']}</td>
-                    <td className="px-4 py-2">{nutrition['Carbohydrates (g)']}</td>
-                    <td className="px-4 py-2">{nutrition['Protein (g)']}</td>
+                    <td className="px-4 py-2">{roundValue(nutrition.Calories, 0)}</td>
+                    <td className="px-4 py-2">{roundValue(nutrition['Fat (g)'], 1)}</td>
+                    <td className="px-4 py-2">{roundValue(nutrition['Carbohydrates (g)'], 1)}</td>
+                    <td className="px-4 py-2">{roundValue(nutrition['Protein (g)'], 1)}</td>
                   </tr>
                 ))}
               </tbody>
