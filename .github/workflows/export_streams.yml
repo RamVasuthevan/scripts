@@ -1,1 +1,4 @@
+name: Export Streams Data
 
+on:
+  workflow_dispatch:
