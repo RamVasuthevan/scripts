@@ -44,16 +44,15 @@ def download_media(media_url, media_folder, file_name):
     except requests.exceptions.RequestException as e:
         logger.error(f"Error downloading media: {e}")
 
-def export_streams_json(username, data):
+def export_streams_json(username, data, output_dir):
     logger.info(f"Starting export for user: {username}")
     
     try:
-        # Create a directory for the user if it doesn't exist
-        user_dir = username
-        os.makedirs(user_dir, exist_ok=True)
+        # Create the output directory if it doesn't exist
+        os.makedirs(output_dir, exist_ok=True)
 
         # Save the JSON data to stream.json
-        json_filename = os.path.join(user_dir, "stream.json")
+        json_filename = os.path.join(output_dir, "stream.json")
         with open(json_filename, 'w', encoding='utf-8') as f:
             json.dump(data, f, ensure_ascii=False, indent=2)
         logger.info(f"Successfully exported JSON data to {json_filename}")
@@ -62,7 +61,7 @@ def export_streams_json(username, data):
         for item in data:
             for media in item.get('media', []):
                 media_type = media['type']
-                media_folder = os.path.join(user_dir, media_type)
+                media_folder = os.path.join(output_dir, media_type)
                 os.makedirs(media_folder, exist_ok=True)
 
                 media_url = media['urlToFile']
@@ -75,17 +74,22 @@ def export_streams_json(username, data):
         logger.error(f"Error writing to file: {e}")
 
 if __name__ == "__main__":
-    if len(sys.argv) != 2:
-        print("Usage: python script_name.py <username>")
+    if len(sys.argv) < 2 or len(sys.argv) > 3:
+        print("Usage: python script_name.py <username> [output_directory]")
         sys.exit(1)
 
     username = sys.argv[1]
-    logger.info(f"Script started with username: {username}")
+    if len(sys.argv) == 3:
+        output_dir = sys.argv[2]
+    else:
+        output_dir = username  # Default to using the username as the directory name
+
+    logger.info(f"Script started with username: {username} and output directory: {output_dir}")
 
     # Fetch data from the API
     data = fetch_streams_data(username)
     if data:
-        export_streams_json(username, data)
+        export_streams_json(username, data, output_dir)
     else:
         logger.error("No data retrieved from API")
 
