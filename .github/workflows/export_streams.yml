@@ -1,0 +1,52 @@
+name: Export Streams Data
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 5 * * *'  # Run at midnight EST (5:00 UTC)
+
+jobs:
+  export_streams:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Check out repository
+      uses: actions/checkout@v2
+      with:
+        repository: RamVasuthevan/dogsheep-data
+        token: ${{ secrets.PAT_TOKEN }}  # Personal Access Token with repo scope
+
+    - name: Set up Python
+      uses: actions/setup-python@v2
+      with:
+        python-version: '3.12'
+
+    - name: Install dependencies
+      run: |
+        pip install pipenv
+        pipenv install
+
+    - name: Run export script
+      run: |
+        pipenv run python export_streams.py ${{ secrets.STREAMS_USERNAME }} ./temp_output
+      env:
+        PYTHONUNBUFFERED: 1
+
+    - name: Check out dogsheep-data repository
+      uses: actions/checkout@v2
+      with:
+        repository: RamVasuthevan/dogsheep-data
+        path: dogsheep-data
+        token: ${{ secrets.PAT_TOKEN }}
+
+    - name: Move exported data
+      run: |
+        mkdir -p dogsheep-data/streams
+        cp -R ./temp_output/* dogsheep-data/streams/
+
+    - name: Commit and push if changed
+      run: |
+        cd dogsheep-data
+        git config user.name github-actions
+        git config user.email github-actions@github.com
+        git add .
+        git diff --quiet && git diff --staged --quiet || (git commit -m "Update streams data" && git push)
