@@ -42,7 +42,7 @@ jobs:
         cd streams-export
         
         pipenv run pip list
-        pipenv run python streams-export/export_streams.py ${{ secrets.STREAMS_USERNAME }} ../temp_output
+        pipenv run python export_streams.py ${{ secrets.STREAMS_USERNAME }} ../temp_output
       env:
         PYTHONUNBUFFERED: 1
 
