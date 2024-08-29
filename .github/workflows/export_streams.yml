@@ -23,11 +23,13 @@ jobs:
     - name: Install dependencies
       run: |
         pip install pipenv
+        cd export_streams
         pipenv install
 
     - name: Run export script
       run: |
-        pipenv run python export_streams.py ${{ secrets.STREAMS_USERNAME }} ./temp_output
+        cd export_streams
+        pipenv run python export_streams.py ${{ secrets.STREAMS_USERNAME }} ../temp_output
       env:
         PYTHONUNBUFFERED: 1
     - name: Move exported data
