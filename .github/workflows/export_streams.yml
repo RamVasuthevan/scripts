@@ -32,12 +32,11 @@ jobs:
     - name: Install dependencies
       run: |
         pip install pipenv
-        cd scripts
-        pipenv install
 
     - name: Run export script
       run: |
         cd scripts
+        pipenv install
         pipenv run python streams-export/export_streams.py ${{ secrets.STREAMS_USERNAME }} ../temp_output
       env:
         PYTHONUNBUFFERED: 1
