@@ -14,7 +14,7 @@ jobs:
       with:
         repository: RamVasuthevan/dogsheep-data
         token: ${{ secrets.PAT_TOKEN }}  # Personal Access Token with repo scope
-
+        ref: test-streams-export  # Checkout the test-streams-export branch
     - name: Set up Python
       uses: actions/setup-python@v2
       with:
@@ -30,23 +30,13 @@ jobs:
         pipenv run python export_streams.py ${{ secrets.STREAMS_USERNAME }} ./temp_output
       env:
         PYTHONUNBUFFERED: 1
-
-    - name: Check out dogsheep-data repository
-      uses: actions/checkout@v2
-      with:
-        repository: RamVasuthevan/dogsheep-data
-        path: dogsheep-data
-        token: ${{ secrets.PAT_TOKEN }}
-
     - name: Move exported data
       run: |
-        mkdir -p dogsheep-data/streams
-        cp -R ./temp_output/* dogsheep-data/streams/
-
+        mkdir -p streams
+        cp -R ./temp_output/* streams/
     - name: Commit and push if changed
       run: |
-        cd dogsheep-data
         git config user.name github-actions
         git config user.email github-actions@github.com
         git add .
-        git diff --quiet && git diff --staged --quiet || (git commit -m "Update streams data" && git push)
+        git diff --quiet && git diff --staged --quiet || (git commit -m "Update streams data" && git push origin test-streams-export)
