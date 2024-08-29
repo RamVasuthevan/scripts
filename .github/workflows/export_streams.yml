@@ -14,7 +14,7 @@ jobs:
       with:
         repository: RamVasuthevan/scripts
         path: scripts
-        token: ${{ secrets.PAT_TOKEN }}  # Personal Access Token with repo scope
+        token: ${{ secrets.PAT_TOKEN }}
 
     - name: Check out dogsheep-data repository
       uses: actions/checkout@v4
@@ -30,45 +30,26 @@ jobs:
         python-version: '3.12'
 
     - name: Install dependencies
+      working-directory: scripts/streams-export
       run: |
         pip install pipenv
-        cd scripts/streams-export
         pipenv install
 
-    - name: Debug - List directories and permissions
+    - name: Delete existing data
       run: |
-        pwd
-        ls -la
-        mkdir -p temp_output
-        chmod 777 temp_output
-        ls -la temp_output
+        rm -rf dogsheep-data/streams/ramvasuthevan
 
     - name: Run export script
+      working-directory: scripts/streams-export
       run: |
-        cd scripts/streams-export
-        pipenv run pip list
-        pipenv run python export_streams.py  ramvasuthevan ../../temp_output
+        pipenv run python export_streams.py ramvasuthevan ../../dogsheep-data/streams/ramvasuthevan
       env:
         PYTHONUNBUFFERED: 1
 
-    - name: Debug - Check temp_output after script run
-      run: |
-        ls -la temp_output || echo "temp_output directory not found or empty"
-
-    - name: Move exported data
-      run: |
-        mkdir -p dogsheep-data/streams
-        if [ -d "temp_output" ] && [ "$(ls -A temp_output)" ]; then
-          cp -R temp_output/* dogsheep-data/streams/
-        else
-          echo "temp_output directory not found or is empty"
-          exit 1
-        fi
-
     - name: Commit and push if changed
+      working-directory: dogsheep-data
       run: |
-        cd dogsheep-data
         git config user.name github-actions
         git config user.email github-actions@github.com
         git add .
-        git diff --quiet && git diff --staged --quiet || (git commit -m "Update streams data" && git push origin test-streams-export)
+        git diff --quiet && git diff --staged --quiet || (git commit -m "Update streams data for ramvasuthevan" && git push origin test-streams-export)
