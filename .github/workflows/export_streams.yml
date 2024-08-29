@@ -32,24 +32,35 @@ jobs:
     - name: Install dependencies
       run: |
         pip install pipenv
-        cd scripts
-        cd streams-export
+        cd scripts/streams-export
         pipenv install
+
+    - name: Debug - List directories
+      run: |
+        pwd
+        ls -R
 
     - name: Run export script
       run: |
-        cd scripts
-        cd streams-export
-        
+        cd scripts/streams-export
         pipenv run pip list
-        pipenv run python export_streams.py ${{ secrets.STREAMS_USERNAME }} ../temp_output
+        pipenv run python export_streams.py ${{ secrets.STREAMS_USERNAME }} ../../temp_output
       env:
         PYTHONUNBUFFERED: 1
+
+    - name: Debug - Check temp_output
+      run: |
+        ls -R temp_output || echo "temp_output directory not found"
 
     - name: Move exported data
       run: |
         mkdir -p dogsheep-data/streams
-        cp -R temp_output/* dogsheep-data/streams/
+        if [ -d "temp_output" ]; then
+          cp -R temp_output/* dogsheep-data/streams/
+        else
+          echo "temp_output directory not found"
+          exit 1
+        fi
 
     - name: Commit and push if changed
       run: |
