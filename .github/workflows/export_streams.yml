@@ -10,13 +10,13 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - name: Check out repository
-      uses: actions/checkout@v2
+      uses: actions/checkout@v4
       with:
         repository: RamVasuthevan/dogsheep-data
         token: ${{ secrets.PAT_TOKEN }}  # Personal Access Token with repo scope
         ref: test-streams-export  # Checkout the test-streams-export branch
     - name: Set up Python
-      uses: actions/setup-python@v2
+      uses: actions/setup-python@v5
       with:
         python-version: '3.12'
 
