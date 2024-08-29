@@ -1,3 +1,4 @@
+import logging.handlers
 import requests
 import json
 import sys
@@ -17,7 +18,8 @@ logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s - %(name)s - %(filename)s (%(lineno)d) - %(levelname)s - %(message)s",
     handlers=[
-        logging.FileHandler(LOG_FILE)
+        logging.FileHandler(LOG_FILE),
+        logging.StreamHandler()
     ]
 )
 
