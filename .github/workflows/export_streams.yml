@@ -37,7 +37,8 @@ jobs:
 
     - name: Run export script
       run: |
-        pipenv run python export_streams.py ${{ secrets.STREAMS_USERNAME }} ../temp_output
+        cd scripts
+        pipenv run python streams-export/export_streams.py ${{ secrets.STREAMS_USERNAME }} ../temp_output
       env:
         PYTHONUNBUFFERED: 1
 
