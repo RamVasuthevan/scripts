@@ -48,10 +48,7 @@ def run(playwright: Playwright) -> None:
         
         print(f"Saved page {page_number} of {last_page_number}")
         
-        time.sleep(10)  # Sleep for 10 seconds between requests
-        
-        if page_number == 10:  # Break after 10 pages
-            break  # Remove this line when you want to process all pages
+        time.sleep(10)
     
     # Close the browser
     context.close()
