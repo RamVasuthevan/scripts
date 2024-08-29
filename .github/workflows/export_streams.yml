@@ -9,20 +9,10 @@ jobs:
   export_streams:
     runs-on: ubuntu-latest
     steps:
-    - name: Check out scripts repository
+    - name: Check out repository
       uses: actions/checkout@v4
       with:
-        repository: RamVasuthevan/scripts
-        path: scripts
         token: ${{ secrets.PAT_TOKEN }}  # Personal Access Token with repo scope
-
-    - name: Check out dogsheep-data repository
-      uses: actions/checkout@v4
-      with:
-        repository: RamVasuthevan/dogsheep-data
-        path: dogsheep-data
-        ref: test-streams-export
-        token: ${{ secrets.PAT_TOKEN }}
 
     - name: Set up Python
       uses: actions/setup-python@v5
@@ -42,10 +32,18 @@ jobs:
       env:
         PYTHONUNBUFFERED: 1
 
+    - name: Check out dogsheep-data repository
+      uses: actions/checkout@v4
+      with:
+        repository: RamVasuthevan/dogsheep-data
+        path: dogsheep-data
+        token: ${{ secrets.PAT_TOKEN }}
+        ref: test-streams-export
+
     - name: Move exported data
       run: |
         mkdir -p dogsheep-data/streams
-        cp -R ./temp_output/* dogsheep-data/streams/
+        cp -R temp_output/* dogsheep-data/streams/
 
     - name: Commit and push if changed
       run: |
