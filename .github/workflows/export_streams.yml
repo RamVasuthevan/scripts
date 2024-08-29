@@ -49,6 +49,7 @@ jobs:
     - name: Move exported data
       run: |
         mkdir -p dogsheep-data/streams
+        find . -type d \( -name .git -o -name node_modules -o -name .jekyll-cache \) -prune -o -print | sed -e 's/[^-][^\/]*\//--/g' -e 's/^/ /' -e 's/-/|/'
         cp -R scripts/streams-export/temp_output/* dogsheep-data/streams/
 
     - name: Commit and push if changed
