@@ -37,12 +37,12 @@ jobs:
 
     - name: Delete existing data
       run: |
-        rm -rf dogsheep-data/streams/ramvasuthevan
+        rm -rf dogsheep-data/streams/${{ secrets.STREAMS_USERNAME }}
 
     - name: Run export script
       working-directory: scripts/streams-export
       run: |
-        pipenv run python export_streams.py ramvasuthevan ../../dogsheep-data/streams/ramvasuthevan
+        pipenv run python export_streams.py ${{ secrets.STREAMS_USERNAME }} ../../dogsheep-data/streams/${{ secrets.STREAMS_USERNAME }}
       env:
         PYTHONUNBUFFERED: 1
 
@@ -66,7 +66,8 @@ jobs:
         commit_message="Streams Export
         Script: ${script_name}
         Repository: ${repository}
-        Commit hash: ${commit_hash}"
+        Commit hash: ${commit_hash}
+        Username: ${{ secrets.STREAMS_USERNAME }}"
         
         # Commit and push if there are changes
         git diff --quiet && git diff --staged --quiet || (git commit -m "$commit_message" && git push origin test-streams-export)
