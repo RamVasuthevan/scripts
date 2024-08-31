@@ -37,12 +37,12 @@ jobs:
 
     - name: Delete existing data
       run: |
-        rm -rf dogsheep-data/streams/${{ variables.STREAMS_USERNAME }}
+        rm -rf dogsheep-data/streams/${{ vars.STREAMS_USERNAME }}
 
     - name: Run export script
       working-directory: scripts/streams-export
       run: |
-        username="${{ variables.STREAMS_USERNAME }}"
+        username="${{ vars.STREAMS_USERNAME }}"
         if [ -z "$username" ]; then
           echo "Error: STREAMS_USERNAME secret is not set or empty"
           exit 1
@@ -72,7 +72,7 @@ jobs:
         Script: ${script_name}
         Repository: ${repository}
         Commit hash: ${commit_hash}
-        Username: ${{ variables.STREAMS_USERNAME }}"
+        Username: ${{ vars.STREAMS_USERNAME }}"
         
         # Commit and push if there are changes
         git diff --quiet && git diff --staged --quiet || (git commit -m "$commit_message" && git push origin test-streams-export)
