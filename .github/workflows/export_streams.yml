@@ -42,7 +42,12 @@ jobs:
     - name: Run export script
       working-directory: scripts/streams-export
       run: |
-        pipenv run python export_streams.py "${{ secrets.STREAMS_USERNAME }}" "../../dogsheep-data/streams/${{ secrets.STREAMS_USERNAME }}"
+        username="${{ secrets.STREAMS_USERNAME }}"
+        if [ -z "$username" ]; then
+          echo "Error: STREAMS_USERNAME secret is not set or empty"
+          exit 1
+        fi
+        pipenv run python export_streams.py "$username" "../../dogsheep-data/streams/$username"
       env:
         PYTHONUNBUFFERED: 1
 
