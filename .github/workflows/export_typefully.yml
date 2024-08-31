@@ -12,9 +12,7 @@ jobs:
     - name: Check out scripts repository
       uses: actions/checkout@v4
       with:
-        repository: RamVasuthevan/scripts
         path: scripts
-        token: ${{ secrets.PAT_TOKEN }}
 
     - name: Check out dogsheep-data repository
       uses: actions/checkout@v4
@@ -30,7 +28,7 @@ jobs:
         python-version: '3.12'
 
     - name: Install dependencies
-      working-directory: scripts/typefully-export
+      working-directory: scripts
       run: |
         pip install pipenv
         pipenv install
@@ -42,7 +40,7 @@ jobs:
         echo "SCRIPT_COMMIT=$(git rev-parse HEAD)" >> $GITHUB_ENV
 
     - name: Run export script
-      working-directory: scripts/typefully-export
+      working-directory: scripts
       run: |
         pipenv run python export_typefully.py
       env:
@@ -52,7 +50,7 @@ jobs:
     - name: Move data to dogsheep-data repository
       run: |
         mkdir -p dogsheep-data/typefully
-        mv scripts/typefully-export/data/* dogsheep-data/typefully/
+        mv scripts/data/* dogsheep-data/typefully/
 
     - name: Commit and push if changed
       working-directory: dogsheep-data
