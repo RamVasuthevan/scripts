@@ -35,8 +35,7 @@ def get_api_data(endpoint):
         response.raise_for_status()
         data = response.json()
         if not data:
-            logging.error(f"Empty response received from {endpoint}")
-            exit(1)
+            logging.warning(f"Empty response received from {endpoint}")
         return data
     except HTTPError as http_err:
         logging.error(f"HTTP error occurred while fetching data from {endpoint}: {http_err}")
