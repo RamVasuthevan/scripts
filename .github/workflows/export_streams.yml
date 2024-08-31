@@ -52,4 +52,21 @@ jobs:
         git config user.name github-actions
         git config user.email github-actions@github.com
         git add .
-        git diff --quiet && git diff --staged --quiet || (git commit -m "Update streams data for ramvasuthevan" && git push origin test-streams-export)
+        
+        # Get script name
+        script_name="export_streams.py"
+        
+        # Get repository name
+        repository=$(git config --get remote.origin.url | sed 's/.*\/\([^\/]*\/[^\/]*\)\.git/\1/')
+        
+        # Get commit hash
+        commit_hash=$(git rev-parse HEAD)
+        
+        # Construct commit message
+        commit_message="Streams Export
+        Script: ${script_name}
+        Repository: ${repository}
+        Commit hash: ${commit_hash}"
+        
+        # Commit and push if there are changes
+        git diff --quiet && git diff --staged --quiet || (git commit -m "$commit_message" && git push origin test-streams-export)
