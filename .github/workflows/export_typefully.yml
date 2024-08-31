@@ -1,0 +1,71 @@
+name: Export Typefully Data
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 5 * * *'  # Run at midnight EST (5:00 UTC)
+
+jobs:
+  export_typefully:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Check out scripts repository
+      uses: actions/checkout@v4
+      with:
+        repository: RamVasuthevan/scripts
+        path: scripts
+        token: ${{ secrets.PAT_TOKEN }}
+
+    - name: Check out dogsheep-data repository
+      uses: actions/checkout@v4
+      with:
+        repository: RamVasuthevan/dogsheep-data
+        path: dogsheep-data
+        ref: test-typefully-export
+        token: ${{ secrets.PAT_TOKEN }}
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.12'
+
+    - name: Install dependencies
+      working-directory: scripts/typefully-export
+      run: |
+        pip install pipenv
+        pipenv install
+
+    - name: Get script info
+      working-directory: scripts
+      run: |
+        echo "SCRIPT_REPO=$(git config --get remote.origin.url | sed 's/.*\/\([^\/]*\/[^\/]*\)\.git/\1/')" >> $GITHUB_ENV
+        echo "SCRIPT_COMMIT=$(git rev-parse HEAD)" >> $GITHUB_ENV
+
+    - name: Run export script
+      working-directory: scripts/typefully-export
+      run: |
+        pipenv run python export_typefully.py
+      env:
+        TYPEFULLY_API_TOKEN: ${{ secrets.TYPEFULLY_API_TOKEN }}
+        PYTHONUNBUFFERED: 1
+
+    - name: Move data to dogsheep-data repository
+      run: |
+        mkdir -p dogsheep-data/typefully
+        mv scripts/typefully-export/data/* dogsheep-data/typefully/
+
+    - name: Commit and push if changed
+      working-directory: dogsheep-data
+      run: |
+        git config user.name github-actions
+        git config user.email github-actions@github.com
+        git add .
+        
+        # Construct commit message
+        commit_message="Typefully Export
+        Script: export_typefully.py
+        Repository: ${{ env.SCRIPT_REPO }}
+        Commit hash: ${{ env.SCRIPT_COMMIT }}"
+        
+        # Commit and push if there are changes
+        git diff --quiet && git diff --staged --quiet || (git commit -m "$commit_message" && git push origin test-typefully-export)
