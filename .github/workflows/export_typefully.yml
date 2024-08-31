@@ -28,7 +28,7 @@ jobs:
         python-version: '3.12'
 
     - name: Install dependencies
-      working-directory: scripts
+      working-directory: scripts/typefully-export
       run: |
         pip install pipenv
         pipenv install
@@ -40,9 +40,9 @@ jobs:
         echo "SCRIPT_COMMIT=$(git rev-parse HEAD)" >> $GITHUB_ENV
 
     - name: Run export script
-      working-directory: scripts
+      working-directory: scripts/typefully-export
       run: |
-        pipenv run python export_typefully.py
+        pipenv run python main.py
       env:
         TYPEFULLY_API_TOKEN: ${{ secrets.TYPEFULLY_API_TOKEN }}
         PYTHONUNBUFFERED: 1
@@ -50,7 +50,7 @@ jobs:
     - name: Move data to dogsheep-data repository
       run: |
         mkdir -p dogsheep-data/typefully
-        mv scripts/data/* dogsheep-data/typefully/
+        mv scripts/typefully-export/data/* dogsheep-data/typefully/
 
     - name: Commit and push if changed
       working-directory: dogsheep-data
@@ -61,7 +61,7 @@ jobs:
         
         # Construct commit message
         commit_message="Typefully Export
-        Script: export_typefully.py
+        Script: typefully-export/main.py
         Repository: ${{ env.SCRIPT_REPO }}
         Commit hash: ${{ env.SCRIPT_COMMIT }}"
         
