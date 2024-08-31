@@ -42,8 +42,8 @@ jobs:
         echo "SCRIPT_COMMIT=$(git rev-parse HEAD)" >> $GITHUB_ENV
 
     - name: Run export script
+      working-directory: /scripts/typefully-export
       run: |
-        ls
         pipenv run python export_typefully.py
       env:
         TYPEFULLY_API_TOKEN: ${{ secrets.TYPEFULLY_API_TOKEN }}
