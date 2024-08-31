@@ -39,15 +39,15 @@ jobs:
       run: |
         rm -rf dogsheep-data/streams/${{ vars.STREAMS_USERNAME }}
 
+    - name: Get script info
+      working-directory: scripts
+      run: |
+        echo "SCRIPT_REPO=$(git config --get remote.origin.url | sed 's/.*\/\([^\/]*\/[^\/]*\)\.git/\1/')" >> $GITHUB_ENV
+        echo "SCRIPT_COMMIT=$(git rev-parse HEAD)" >> $GITHUB_ENV
+
     - name: Run export script
       working-directory: scripts/streams-export
-      run: |
-        username="${{ vars.STREAMS_USERNAME }}"
-        if [ -z "$username" ]; then
-          echo "Error: STREAMS_USERNAME secret is not set or empty"
-          exit 1
-        fi
-        pipenv run python export_streams.py "$username" "../../dogsheep-data/streams/$username"
+      run: pipenv run python export_streams.py "$username" "../../dogsheep-data/streams/$username"
       env:
         PYTHONUNBUFFERED: 1
 
@@ -58,20 +58,11 @@ jobs:
         git config user.email github-actions@github.com
         git add .
         
-        # Get script name
-        script_name="export_streams.py"
-        
-        # Get repository name
-        repository=$(git config --get remote.origin.url | sed 's/.*\/\([^\/]*\/[^\/]*\)\.git/\1/')
-        
-        # Get commit hash
-        commit_hash=$(git rev-parse HEAD)
-        
         # Construct commit message
         commit_message="Streams Export
-        Script: ${script_name}
-        Repository: ${repository}
-        Commit hash: ${commit_hash}
+        Script: export_streams.py
+        Repository: ${{ env.SCRIPT_REPO }}
+        Commit hash: ${{ env.SCRIPT_COMMIT }}
         Username: ${{ vars.STREAMS_USERNAME }}"
         
         # Commit and push if there are changes
