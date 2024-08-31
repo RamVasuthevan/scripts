@@ -42,7 +42,7 @@ jobs:
     - name: Run export script
       working-directory: scripts/streams-export
       run: |
-        pipenv run python export_streams.py ${{ secrets.STREAMS_USERNAME }} ../../dogsheep-data/streams/${{ secrets.STREAMS_USERNAME }}
+        pipenv run python export_streams.py "${{ secrets.STREAMS_USERNAME }}" "../../dogsheep-data/streams/${{ secrets.STREAMS_USERNAME }}"
       env:
         PYTHONUNBUFFERED: 1
 
