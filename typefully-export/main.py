@@ -3,6 +3,7 @@ import requests
 import json
 from dotenv import load_dotenv
 import logging
+from requests.exceptions import HTTPError
 
 LOG_FILE: str = "export_processing.log"
 
@@ -39,11 +40,17 @@ def get_api_data(endpoint):
     url = f'{BASE_URL}{endpoint}'
     try:
         response = requests.get(url, headers=headers)
-        response.raise_for_status()  # Raises an HTTPError for bad responses
-        return response.json()
-    except requests.exceptions.RequestException as e:
-        logging.error(f"Error fetching data from {endpoint}: {str(e)}")
-        return None
+        response.raise_for_status()
+        data = response.json()
+        if not data:
+            logging.error(f"Empty response received from {endpoint}")
+            exit(1)
+    except HTTPError as http_err:
+        logging.error(f"HTTP error occurred while fetching data from {endpoint}: {http_err}")
+        exit(1)
+    except Exception as err:
+        logging.error(f"An error occurred while fetching data from {endpoint}: {err}")
+        exit(1)
 
 def write_to_json(data, filename):
     """
@@ -64,6 +71,11 @@ def write_to_json(data, filename):
         logging.error(f"Error writing to {file_path}: {str(e)}")
 
 def main():
+    # Check if API token exists
+    if not API_TOKEN:
+        logging.error("TYPEFULLY_API_TOKEN is not set. Please set the environment variable.")
+        exit(1)
+
     # Endpoints to fetch data from
     endpoints = {
         'recently_scheduled': '/drafts/recently-scheduled/',
@@ -71,15 +83,25 @@ def main():
         'latest_notifications': '/notifications/'
     }
 
+    # Flag to check if any data was retrieved
+    data_retrieved = False
+
     # Fetch data from each endpoint and write to JSON files
     for name, endpoint in endpoints.items():
         logging.info(f"Fetching data from {endpoint}")
         data = get_api_data(endpoint)
         if data is not None:
-            write_to_json(data, f'{name}.json')
+            if data:  # Check if data is not empty
+                write_to_json(data, f'{name}.json')
+                data_retrieved = True
+            else:
+                logging.warning(f"No data retrieved for {name}. Writing empty JSON object.")
+                write_to_json({}, f'{name}.json')  # Write an empty JSON object
         else:
-            logging.warning(f"No data retrieved for {name}. Writing empty JSON object.")
-            write_to_json({}, f'{name}.json')  # Write an empty JSON object
+            logging.error(f"Failed to retrieve data for {name}. Skipping this endpoint.")
+
+    if not data_retrieved:
+        logging.warning("No data was retrieved from any endpoint. Please check your API token and endpoints.")
 
 if __name__ == "__main__":
     main()
