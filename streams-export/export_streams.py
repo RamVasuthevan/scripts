@@ -33,7 +33,7 @@ def fetch_streams_data(username):
         return response.json()
     except requests.exceptions.RequestException as e:
         logger.error(f"Error fetching data from API: {e}")
-        return None
+        exit(1)
 
 def download_media(media_url, media_folder, file_name):
     try:
@@ -45,6 +45,7 @@ def download_media(media_url, media_folder, file_name):
         logger.info(f"Successfully downloaded: {file_path}")
     except requests.exceptions.RequestException as e:
         logger.error(f"Error downloading media: {e}")
+        exit(1)
 
 def export_streams_json(username, data, output_dir):
     logger.info(f"Starting export for user: {username}")
@@ -74,6 +75,7 @@ def export_streams_json(username, data, output_dir):
 
     except IOError as e:
         logger.error(f"Error writing to file: {e}")
+        exit(1)
 
 if __name__ == "__main__":
     if len(sys.argv) < 2 or len(sys.argv) > 3:
@@ -94,5 +96,6 @@ if __name__ == "__main__":
         export_streams_json(username, data, output_dir)
     else:
         logger.error("No data retrieved from API")
-
+        exit(1)
+        
     logger.info("Script execution completed")
