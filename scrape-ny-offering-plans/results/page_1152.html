@@ -1,0 +1,466 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML+RDFa 1.0//EN" "http://www.w3.org/MarkUp/DTD/xhtml-rdfa-1.dtd"><html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" version="XHTML+RDFa 1.0" dir="ltr" xmlns:content="http://purl.org/rss/1.0/modules/content/" xmlns:dc="http://purl.org/dc/terms/" xmlns:foaf="http://xmlns.com/foaf/0.1/" xmlns:og="http://ogp.me/ns#" xmlns:rdfs="http://www.w3.org/2000/01/rdf-schema#" xmlns:sioc="http://rdfs.org/sioc/ns#" xmlns:sioct="http://rdfs.org/sioc/types#" xmlns:skos="http://www.w3.org/2004/02/skos/core#" xmlns:xsd="http://www.w3.org/2001/XMLSchema#"><head profile="http://www.w3.org/1999/xhtml/vocab">
+
+        <!-- Global site tag (gtag.js) - Google Analytics -->
+        <script type="text/javascript" async="" src="https://www.googletagmanager.com/gtag/js?id=G-9MRE3MXFMY&amp;cx=c&amp;_slc=1"></script><script type="text/javascript" async="" src="https://www.google-analytics.com/plugins/ua/linkid.js"></script><script async="" src="https://www.google-analytics.com/analytics.js"></script><script type="text/javascript" async="" src="https://www.google-analytics.com/analytics.js"></script><script type="text/javascript" async="" src="https://www.googletagmanager.com/gtag/js?id=G-FW3LR7DH4P&amp;l=dataLayer&amp;cx=c"></script><script async="" src="https://www.googletagmanager.com/gtag/js?id=UA-33973995-15"></script>
+        <script>
+          window.dataLayer = window.dataLayer || [];
+          function gtag(){dataLayer.push(arguments);}
+          gtag('js', new Date());
+         
+          gtag('config', 'UA-33973995-15');
+        </script>
+
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+        <meta about="https://www.ag.ny.gov/bureau/real-estate-finance-bureau/" property="sioc:num_replies" content="0" datatype="xsd:integer">
+        <meta content="The Real Estate Finance Database" about="http://offeringplan.datasearch.ag.ny.gov/REF/" property="dc:title">
+        <link rel="canonical" href="http://offeringplan.datasearch.ag.ny.gov/REF/">
+        <meta name="Generator" content="Drupal 7 (http://drupal.org)">
+        <link rel="shortlink" href="/node/34625">
+        <title>The Real Estate Finance Database</title>
+
+        <style type="text/css" media="all">
+            @import url("https://ag.ny.gov/sites/all/modules/megamenu/megamenu.css?lyofui");
+            @import url("https://ag.ny.gov/sites/all/modules/megamenu/megamenu-skins.css?lyofui");
+            @import url("https://ag.ny.gov/profiles/openpublic/themes/openpublic_theme/css/basics.css?lyofui");
+            @import url("https://ag.ny.gov/profiles/openpublic/themes/openpublic_theme/css/openpublic_theme.css?lyofui");
+            
+        </style>
+        <link rel="stylesheet" type="text/css" href="css/ref_webteam_custom.css">
+
+        <script type="text/javascript">
+            function onLoad() {
+                // Prevention for ClickJacking
+                if (self == top) {
+                    var theBody = document.getElementsByTagName('body')[0];
+                    theBody.style.display = "block";
+                }
+                else {
+                    top.location = self.location;
+                }
+                
+                // Default checked searchType radio button
+                if ((document.getElementById("searchTypesearchByPlanId").checked == false) && (document.getElementById("searchTypesearchBySponsorName").checked == false)) {
+                    document.getElementById("searchTypesearchByPlanId").checked = true;
+                }
+            }
+            
+            // Submit planFormServletForm. Save return url and search criteria into session during planFormServlet servlet executes. 
+            // These sessoin variables would be used as soon as the user returns to search page.
+            function submitPlanFormServletForm(ele, planId) {
+            //    var returnUrl = ele.href.substring(ele.href.lastIndexOf("/"));
+                
+                var returnSearchUrl = ele.href.substring(ele.href.lastIndexOf("/") + 1);
+                var searchKeyword = document.getElementsByName("searchForm.searchKeyword")[0].value;
+                var searchType = "searchByPlanId";
+                // Search by plan ID, name or address
+                if (document.getElementsByName("searchForm.searchType")[0].checked) {
+                    searchType = "searchByPlanId";
+                } 
+                // Search by sponsor or principal name
+                else if (document.getElementsByName("searchForm.searchType")[1].checked) {
+                    searchType = "searchBySponsorName";
+                }
+                
+//                alert("returnSearchUrl = " + returnSearchUrl);
+//                alert("planId = " + planId);
+//                alert("searchKeyword = " + searchKeyword);
+//                alert("searchType = " + searchType);
+                
+                // Set return search parameters into hidden fields.
+                document.getElementById("returnSearchUrl").value = returnSearchUrl;
+                document.getElementById("planId").value = planId;
+                document.getElementById("searchKeyword").value = searchKeyword;
+                document.getElementById("searchType").value = searchType;
+                
+                document.getElementById("planFormServletForm").submit();
+                
+            }
+        </script>
+        <!--[if lte IE 8]>
+        <style type="text/css" media="all">@import url("https://ag.ny.gov/profiles/openpublic/themes/openpublic_theme/css/openpublic_theme_ie8.css?lyofui");</style>
+        <![endif]-->
+                <!--[if lte IE 7]>
+        <style type="text/css" media="all">@import url("https://ag.ny.gov/profiles/openpublic/themes/openpublic_theme/css/openpublic_theme_ie7.css?lyofui");</style>
+        <![endif]-->
+        <!--
+        <script type="text/javascript" src="https://www.ag.ny.gov/misc/jquery.js?v=1.4.4"></script>
+        <script type="text/javascript" src="https://www.ag.ny.gov/misc/jquery.once.js?v=1.2"></script>
+        -->
+        <!-- Disable has_js cookie -->
+        <!-- <script type="text/javascript" src="https://www.ag.ny.gov/misc/drupal.js?lyofui"></script>
+        <script type="text/javascript"
+                src="https://www.ag.ny.gov/sites/all/modules/admin_menu/admin_devel/admin_devel.js?lyofui"></script>
+        <script type="text/javascript" src="https://www.ag.ny.gov/profiles/openpublic/js/menu.js?lyofui"></script>
+        <script type="text/javascript"
+                src="https://www.ag.ny.gov/sites/all/libraries/colorbox/colorbox/jquery.colorbox-min.js?lyofui"></script>
+        <script type="text/javascript"
+                src="https://www.ag.ny.gov/profiles/openpublic/modules/contrib/colorbox/js/colorbox.js?lyofui"></script>
+        <script type="text/javascript"
+                src="https://www.ag.ny.gov/profiles/openpublic/modules/contrib/colorbox/styles/default/colorbox_default_style.js?lyofui"></script>
+        <script type="text/javascript"
+                src="https://www.ag.ny.gov/profiles/openpublic/modules/contrib/colorbox/js/colorbox_load.js?lyofui"></script>
+        <script type="text/javascript"
+                src="https://www.ag.ny.gov/profiles/openpublic/modules/custom/combineblocks/combineblocks.js?lyofui"></script>
+        <script type="text/javascript" src="https://www.ag.ny.gov/sites/all/modules/megamenu/megamenu.js?lyofui"></script>
+        <script type="text/javascript"
+                src="https://www.ag.ny.gov/profiles/openpublic/modules/contrib/panels/js/panels.js?lyofui"></script> -->
+        <!--
+        <script type="text/javascript"
+                src="https://www.ag.ny.gov/profiles/openpublic/modules/contrib/field_group/field_group.js?lyofui"></script>
+        <script type="text/javascript"
+                src="https://www.ag.ny.gov/profiles/openpublic/themes/openpublic_theme/js/theme-support.js?lyofui"></script>
+        -->
+        
+        <script type="text/javascript">
+        <!--//--><![CDATA[//><!--
+        jQuery.extend(Drupal.settings, {"basePath":"\/","pathPrefix":"","ajaxPageState":{"theme":"openpublic_theme","theme_token":"_yKcbDgpn5YGogupzjPTPcCmHLvLylgOyjhjLZaJWZ0","js":{"misc\/jquery.js":1,"misc\/jquery.once.js":1,"misc\/drupal.js":1,"sites\/all\/modules\/admin_menu\/admin_devel\/admin_devel.js":1,"profiles\/openpublic\/js\/menu.js":1,"sites\/all\/libraries\/colorbox\/colorbox\/jquery.colorbox-min.js":1,"profiles\/openpublic\/modules\/contrib\/colorbox\/js\/colorbox.js":1,"profiles\/openpublic\/modules\/contrib\/colorbox\/styles\/default\/colorbox_default_style.js":1,"profiles\/openpublic\/modules\/contrib\/colorbox\/js\/colorbox_load.js":1,"profiles\/openpublic\/modules\/custom\/combineblocks\/combineblocks.js":1,"sites\/all\/modules\/megamenu\/megamenu.js":1,"profiles\/openpublic\/modules\/contrib\/panels\/js\/panels.js":1,"0":1,"profiles\/openpublic\/modules\/contrib\/field_group\/field_group.js":1,"profiles\/openpublic\/themes\/openpublic_theme\/js\/theme-support.js":1},"css":{"modules\/system\/system.base.css":1,"modules\/system\/system.menus.css":1,"modules\/system\/system.messages.css":1,"modules\/system\/system.theme.css":1,"modules\/comment\/comment.css":1,"modules\/field\/theme\/field.css":1,"sites\/all\/modules\/google_appliance\/theme\/google_appliance.css":1,"modules\/node\/node.css":1,"modules\/search\/search.css":1,"modules\/user\/user.css":1,"profiles\/openpublic\/modules\/contrib\/views\/css\/views.css":1,"profiles\/openpublic\/css\/menu.css":1,"profiles\/openpublic\/modules\/contrib\/colorbox\/styles\/default\/colorbox_default_style.css":1,"profiles\/openpublic\/modules\/custom\/combineblocks\/combineblocks.css":1,"profiles\/openpublic\/modules\/contrib\/ctools\/css\/ctools.css":1,"profiles\/openpublic\/modules\/contrib\/follow\/follow.css":1,"sites\/all\/modules\/megamenu\/megamenu.css":1,"sites\/all\/modules\/megamenu\/megamenu-skins.css":1,"profiles\/openpublic\/modules\/custom\/openpublic_splash\/openpublic_splash.css":1,"profiles\/openpublic\/modules\/contrib\/panels\/css\/panels.css":1,"profiles\/openpublic\/modules\/contrib\/twitter_pull\/twitter-pull-listing.css":1,"profiles\/openpublic\/modules\/contrib\/addthis\/addthis.css":1,"profiles\/openpublic\/modules\/features\/openpublic_most_popular\/theme\/openpublic_most_popular.css":1,"profiles\/openpublic\/modules\/contrib\/field_group\/field_group.css":1,"profiles\/openpublic\/modules\/contrib\/date\/date_api\/date.css":1,"profiles\/openpublic\/themes\/openpublic_theme\/css\/basics.css":1,"profiles\/openpublic\/themes\/openpublic_theme\/css\/editor.css":1,"profiles\/openpublic\/themes\/openpublic_theme\/css\/openpublic_theme.css":1,"profiles\/openpublic\/themes\/openpublic_theme\/css\/webteam_custom.css":1,"profiles\/openpublic\/themes\/openpublic_theme\/css\/print.css":1,"profiles\/openpublic\/themes\/openpublic_theme\/css\/openpublic_theme_ie8.css":1,"profiles\/openpublic\/themes\/openpublic_theme\/css\/openpublic_theme_ie7.css":1}},"colorbox":{"transition":"elastic","speed":350,"opacity":"0.85","slideshow":false,"slideshowAuto":false,"slideshowSpeed":2500,"slideshowStart":"","slideshowStop":"","current":"{current} of {total}","previous":"\u00ab Prev","next":"Next \u00bb","close":"Close","overlayClose":true,"maxWidth":"100%","maxHeight":"100%","__drupal_alter_by_ref":["default"]},"combineblocks_sets":[["#block-views-most-popular-content-block-1","#block-views-most-popular-content-block-2"]],"megamenu":{"timeout":"500","sizewait":"500","hoverwait":"500"},"profile":"openpublic","profile_version":"7.x-1.0-beta1","og":{"og_context":{"gid":"60","etid":"2099","entity_type":"node","label":"Real Estate Finance Bureau","state":"1","created":"1320087506","rdf_mapping":[]}}});
+        //--><!]]>
+        </script>
+
+        <script>
+(function (i, s, o, g, r, a, m) {
+              i['GoogleAnalyticsObject'] = r;
+              i[r] = i[r] || function () {
+                  (i[r].q = i[r].q || []).push(arguments)
+              },
+              i[r].l = 1 * new Date();
+              a = s.createElement(o), m = s.getElementsByTagName(o)[0];
+              a.async = 1;
+              a.src = g;
+              m.parentNode.insertBefore(a, m)
+          })(window, document, 'script', 'https://www.google-analytics.com/analytics.js', 'ga');
+
+          ga('create', 'UA-33973995-7', 'auto');
+          ga('require', 'linkid');
+          ga('send', 'pageview');
+        </script>
+        <link rel="stylesheet" type="text/css" href="css/displaytagex.css">
+        <script type="text/javascript" src="js/Rowhandlers.js"></script>
+    </head>
+    <body onload="onLoad()" class="html not-front not-logged-in one-sidebar sidebar-second page-node page-node- page-node-34625 node-type-site-page group-context group-context-group-60 group-context-node group-context-node-2099" style="display: block;">
+        <div id="outer-wrapper">
+            <a href="#content" class="element-invisible element-focusable">Skip to main content</a>
+            
+            <div id="page-wrapper" class="clearfix">
+                <div id="wrap" class="center-on-page clearfix">
+                    <div id="bg-wrap" class="center-on-page clearfix" style="background-color: white">
+                        <div class="region region-main-menu-region">
+                            <div id="block-megamenu-0" class="block block-megamenu">
+                                <!-- this is where the extra space is -->
+                                <div id="main" style="width:97%; background: white; padding-top:0px;">
+                                    
+                                    <table style="width: 100%">
+                                        <tbody><tr>
+                                            <td>
+                                                <div id="REF Banner">
+                                                    <img src="images/real_estate_finance_bureau.jpg" alt="Real Estate Finance Database Search">
+                                                </div>
+                                            </td>
+                                        </tr>
+                                         
+                                        <tr>
+                                            <td>
+                                                <div id="breadcrumb">
+                                                    <div class="breadcrumb">
+                                                        <a href="https://www.ag.ny.gov">Home</a>
+                                                         » 
+                                                        <a href="https://www.ag.ny.gov/bureau/real-estate-finance-bureau" title="About the Real Estate Finance Bureau">Real Estate
+                                                                                                        Finance Bureau</a>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                         
+                                        <tr>
+                                            <td>&nbsp;</td>
+                                        </tr>
+                                         
+                                        <tr>
+                                            <td>
+                                                <!--  style="padding-left:5px; padding-right:5px;"  -->
+
+
+
+
+
+
+
+ 
+
+
+<div id="content"></div>
+
+<form id="search" name="search" action="search.action" method="post">
+    <hr>
+    
+    <table style="border-spacing: 3px; border-width:0; width: 100%;" class="welcomeTable">
+        <tbody><tr style="height:20.0px;">
+            
+            <td style="width: 100%" colspan="2">
+            </td>
+        </tr>
+        <tr>
+            
+            <td colspan="4" style="height:30.0px; font-family: Verdana, Arial, Helvetica, sans_serif; font-size: 12px; line-height: 5px; text-align:center; padding: 6px">
+                <!-- <b>Welcome to the Real Estate Finance Bureau Website</b> -->
+                <h1>Welcome to the Real Estate Finance Bureau Website</h1>
+                <br><br>
+            </td>
+        </tr>
+        <tr>
+            
+            <td colspan="4" style="text-align:center">
+                <input type="text" name="searchForm.searchKeyword" size="36" maxlength="100" value="" id="search_searchForm_searchKeyword" title="Search Keywords">&nbsp;
+                <input type="submit" value="    Search    " id="search_search_one" name="search_one">
+
+            </td>
+        </tr>
+        <tr>
+            
+            <td style="width: 30%">
+            </td>
+            <td>
+                <div role="radiogroup" aria-label="Search category">
+                    <input type="radio" name="searchForm.searchType" id="searchTypesearchByPlanId" value="searchByPlanId" aria-label="Search by plan ID, name or address"><label for="searchTypesearchByPlanId">Search by plan ID, name or address</label>
+<input type="radio" name="searchForm.searchType" id="searchTypesearchBySponsorName" value="searchBySponsorName" aria-label="Search by plan ID, name or address"><label for="searchTypesearchBySponsorName">Search by sponsor or principal name</label>
+
+                </div>
+            </td>
+            <!--
+            <td width="15%" align="left">Search by plan ID, name or address: </td>
+            <td width="15%" align="left">Search by sponsor or principal name: </td>
+            -->
+            
+            <td style="width: 40%">
+            </td>
+        </tr>
+        <tr>
+<td colspan="4" style="text-align: left">
+<br><strong>To View a Plan, Select One Below:</strong><br><br>
+</td>
+</tr>
+
+    </tbody></table>
+</form>
+
+
+
+
+<form name="planFormServletForm" action="planFormServlet" id="planFormServletForm" method="post">
+    
+    
+    <span class="pagebanner">36,579 items found, displaying 17,266 to 17,280.</span><span class="pagelinks">[<a href="search.action?d-16544-p=1">First</a>/<a href="search.action?d-16544-p=1151">Prev</a>] <a href="search.action?d-16544-p=1148" title="Go to page 1,148">1,148</a>, <a href="search.action?d-16544-p=1149" title="Go to page 1,149">1,149</a>, <a href="search.action?d-16544-p=1150" title="Go to page 1,150">1,150</a>, <a href="search.action?d-16544-p=1151" title="Go to page 1,151">1,151</a>, <strong>1,152</strong>, <a href="search.action?d-16544-p=1153" title="Go to page 1,153">1,153</a>, <a href="search.action?d-16544-p=1154" title="Go to page 1,154">1,154</a>, <a href="search.action?d-16544-p=1155" title="Go to page 1,155">1,155</a> [<a href="search.action?d-16544-p=1153">Next</a>/<a href="search.action?d-16544-p=2439">Last</a>]</span>
+<table summary="Results for searching by plan ID, name or address" class="dataTable" id="row">
+<thead>
+<tr>
+<th class="planID sorted order1">ID</th>
+<th class="planName sortable">
+<a href="search.action?d-16544-p=1152&amp;d-16544-s=1&amp;d-16544-o=2">Name</a></th>
+<th class="planAddress sortable">
+<a href="search.action?d-16544-p=1152&amp;d-16544-s=2&amp;d-16544-o=2">Address</a></th>
+<th class="planType sortable">
+<a href="search.action?d-16544-p=1152&amp;d-16544-s=3&amp;d-16544-o=2">Type</a></th></tr></thead>
+<tbody>
+<tr class="odd">
+<td class="plan_id">
+            <a href="#" onclick="submitPlanFormServletForm(this, 'CD030023');">CD030023</a>
+        </td>
+<td>130 WEST 30TH STREET CONDOMINIUM</td>
+<td>130 WEST 30TH STREET, NEW YORK, NY, 10001</td>
+<td>CONDOMINIUM</td></tr>
+<tr class="even">
+<td class="plan_id">
+            <a href="#" onclick="submitPlanFormServletForm(this, 'CD030029');">CD030029</a>
+        </td>
+<td>LUMBER YARD CONDOMINIUM</td>
+<td>565 AND 569 CARROLL STREET, BROOKLYN, NY, 11215</td>
+<td>CONDOMINIUM</td></tr>
+<tr class="odd">
+<td class="plan_id">
+            <a href="#" onclick="submitPlanFormServletForm(this, 'CD030030');">CD030030</a>
+        </td>
+<td>1342 49TH STREET CONDOMINIUM (THE)</td>
+<td>1342 49TH STREET, BROOKLYN, NY, 11219</td>
+<td>CONDOMINIUM</td></tr>
+<tr class="even">
+<td class="plan_id">
+            <a href="#" onclick="submitPlanFormServletForm(this, 'CD030031');">CD030031</a>
+        </td>
+<td>1344 49TH STREET CONDOMINIUM (THE)</td>
+<td>1344 49TH STREET, BROOKLYN, NY, 11219</td>
+<td>CONDOMINIUM</td></tr>
+<tr class="odd">
+<td class="plan_id">
+            <a href="#" onclick="submitPlanFormServletForm(this, 'CD030032');">CD030032</a>
+        </td>
+<td>1346 49TH STREET CONDOMINIUM (THE)</td>
+<td>1346 49TH STREET, BROOKLYN, NY, 11219</td>
+<td>CONDOMINIUM</td></tr>
+<tr class="even">
+<td class="plan_id">
+            <a href="#" onclick="submitPlanFormServletForm(this, 'CP020053');">CP020053</a>
+        </td>
+<td>HAMILTON (THE)</td>
+<td>330 WEST 145TH STREET, NEW YORK, NY, 10027</td>
+<td>CONDOMINIUM</td></tr>
+<tr class="odd">
+<td class="plan_id">
+            <a href="#" onclick="submitPlanFormServletForm(this, 'HO020076');">HO020076</a>
+        </td>
+<td>HARDY SUBDIVISION</td>
+<td>COUNTY ROAD 14, WEST BLOOMFIELD, NY, 14475</td>
+<td>HOMEOWNERS ASSOCIATION</td></tr>
+<tr class="even">
+<td class="plan_id">
+            <a href="#" onclick="submitPlanFormServletForm(this, 'HO020077');">HO020077</a>
+        </td>
+<td>RESERVE AT LITCHFIELD (THE)</td>
+<td>14240 OCEAN HIGHWAY 17N, PAWLEY ISLAND, SC, 29585</td>
+<td>HOMEOWNERS ASSOCIATION</td></tr>
+<tr class="odd">
+<td class="plan_id">
+            <a href="#" onclick="submitPlanFormServletForm(this, 'HO020078');">HO020078</a>
+        </td>
+<td>HYLAN CROMWELL POA</td>
+<td>1672 HYLAN BOULEVARD, STATEN ISLAND, NY, 10305</td>
+<td>HOMEOWNERS ASSOCIATION</td></tr>
+<tr class="even">
+<td class="plan_id">
+            <a href="#" onclick="submitPlanFormServletForm(this, 'HO020079');">HO020079</a>
+        </td>
+<td>SUNSET DRIVE HOA</td>
+<td>145 HARBOR ROAD, ST. JAMES, NY, 11780</td>
+<td>HOMEOWNERS ASSOCIATION</td></tr>
+<tr class="odd">
+<td class="plan_id">
+            <a href="#" onclick="submitPlanFormServletForm(this, 'HO020080');">HO020080</a>
+        </td>
+<td>CREEKSIDE COURT SUBDIVISION</td>
+<td>34 BUCKMAN ROAD, GREECE, NY, 14615</td>
+<td>HOMEOWNERS ASSOCIATION</td></tr>
+<tr class="even">
+<td class="plan_id">
+            <a href="#" onclick="submitPlanFormServletForm(this, 'HO030011');">HO030011</a>
+        </td>
+<td>LINCOLN HILLS SUBDIVISION, SEC 2</td>
+<td>LINCOLN ROAD, WALWORTH, NY, 14568</td>
+<td>HOMEOWNERS ASSOCIATION</td></tr>
+<tr class="odd">
+<td class="plan_id">
+            <a href="#" onclick="submitPlanFormServletForm(this, 'NA020138');">NA020138</a>
+        </td>
+<td>LINWOOD AVENUE HOA</td>
+<td>130, 154, 156 LINWOOD AVENUE, STATEN ISLAND, NY, 10305</td>
+<td>HOMEOWNERS ASSOCIATION</td></tr>
+<tr class="even">
+<td class="plan_id">
+            <a href="#" onclick="submitPlanFormServletForm(this, 'NA020139');">NA020139</a>
+        </td>
+<td>BEACH CHANNEL DRIVE HOA</td>
+<td>2446 BEACH CHANNEL DRIVE, FAR ROCKAWAY, NY, 11691</td>
+<td>HOMEOWNERS ASSOCIATION</td></tr>
+<tr class="odd">
+<td class="plan_id">
+            <a href="#" onclick="submitPlanFormServletForm(this, 'NA030023');">NA030023</a>
+        </td>
+<td>505 CENTRAL AVENUE CORP.</td>
+<td>505 CENTRAL AVENUE, WHITE PLAINS, NY, 10606</td>
+<td>COOPERATIVE</td></tr></tbody></table>
+    
+    <br>
+        
+        <table style="width: 100%">
+            <tbody><tr>
+                
+                <td style="width: 10%">
+                </td>
+                
+                <td style="text-align:left; width: 80%;">
+                    <p>
+                    <!-- <b>Searching data:</b> -->
+                    <strong>Searching data:</strong>
+                    <br>
+                    This database has a search mechanism to assist you in finding information quickly and easily. You have several 
+                    search options:</p>
+                    
+                    <p>
+                    <!--  <b>1. Quick Search:</b> -->
+                    <strong>1. Quick Search:</strong>
+                    <br>
+                    This is the simplest option. It allows you to enter broad search criteria quickly. Simply enter either a 
+                    portion of the name of the Plan or the Plan's address. This kind of search is the quickest but may result 
+                    in a large number of returns. You may scroll through the returned information or you can refine the search 
+                    criteria. For example, if you enter <!-- <b>sara</b>--><strong>sara</strong> the search would return all records in which those characters are 
+                    found anywhere in either the Plan name or Plan address.</p>
+                    
+                    <p>NOTE: The search mechanism is not case sensitive.</p>
+                    
+                    <p>
+                    <!-- <b>2. Restricted search:</b> -->
+                    <strong>2. Restricted search:</strong>
+                    <br>
+                    This search option will allow you to zero in on a smaller group of returns for your search. If your quick 
+                    search consists of a small number of letters you can add additional letters to narrow the search. For instance, 
+                    if you used the search criteria <!-- <b>sara</b> --> <strong>sara</strong> your first search, this would return any Plan name or Plan address with 
+                    variations of <!-- <b>sara</b --><strong>sara</strong>. Returns would include things such as Sarasota and Saratoga. If you are searching for Saratoga, 
+                    entering the entire word would limit the returns to only data including the entire word Saratoga.</p>
+        
+                    <p>
+                    <!-- <b>3. Wild Card Search:</b> -->
+                    <strong>3. Wild Card Search:</strong>
+                    <br>
+                    Another method of searching is the use of the wild card. You may perform this type of search by using the percent 
+                    (%) character.</p>
+        
+                    <p>For Quick searches and Restricted searches, use of a wild card is not necessary because the search mechanism 
+                    automatically employs wild cards at the beginning and end of entered search terms which results in a return of 
+                    any data containing the letters entered in the search. This is good enough for most searches but in rare instances 
+                    a more restrictive search is necessary to enable a return of a manageable set of data.</p>
+        
+                    <p>For instance, if you were searching for 530-536 Broadway, you could enter 530. This would return all rows with 
+                    a 530 anywhere in the Plan name or Plan street. This search would return over 30 possible hits, one of which is 530-536 
+                    Broadway. Entering Broadway would return all rows with Broadway anywhere in the Plan name or Plan street. This search 
+                    would return over 400 possible hits, one of which is 530-536 Broadway. Choosing to use the wild card character, you 
+                    would enter <!-- <b>530%Broadway.</b> --><strong>530%Broadway.</strong>  This search would return exactly 1 record containing 530-536 Broadway.</p>
+                </td>
+                
+                <td style="width: 10%">
+                </td>
+            </tr>
+        </tbody></table>
+    <br><br>
+    
+    
+    <input type="hidden" description="returnSearchUrl" name="returnSearchUrl" id="returnSearchUrl">
+    <input type="hidden" description="planId" name="planId" id="planId">
+    <input type="hidden" description="searchKeyword" name="searchKeyword" id="searchKeyword">
+    <input type="hidden" description="searchType" name="searchType" id="searchType">
+    
+</form>
+
+<script type="text/javascript">
+document.searchformbean.search_type[0].checked = 'true';
+</script>
+
+
+
+                                            </td>
+                                        </tr>
+                                    </tbody></table>
+                                </div>
+                                <!-- main -->
+                            </div>
+                            <!-- blockmenu-0 ?-->
+                        </div>
+                        <!--  region-main-menu-region -->
+                    </div>
+                    <!-- bg-wrap, was wrap-inner-->
+                </div>
+                <!-- /wrap-->
+            </div>
+            <!--   page wrapper -->
+        </div>
+        <!--   outer-wrapper -->
+        <script type="text/javascript" src="js/iframeResizer.contentWindow.min.js"></script>
+    
+</body></html>
