@@ -35,6 +35,7 @@ logger = logging.getLogger(__name__)
 def connect_to_email() -> imaplib.IMAP4_SSL:
     """Connect to the email server and log in."""
     load_dotenv()
+    validate_environment_variables()
 
     email_user: str = os.getenv("EMAIL_USER")
     email_password: str = os.getenv("EMAIL_PASSWORD")
@@ -327,7 +328,7 @@ def validate_environment_variables():
 
 def main():
     logger.info("Starting the email processing script")
-    validate_environment_variables()
+   
     branch = "main"
 
     try:
