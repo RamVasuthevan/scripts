@@ -301,9 +301,17 @@ def process_emails(mail: imaplib.IMAP4_SSL, branch: str):
         
     commit_untracked_files_to_repo(repo_dir, os.path.basename(__file__))
 
+def validate_environment_variables():
+    """Validate that all required environment variables are set."""
+    required_vars = ['EMAIL_USER', 'EMAIL_PASSWORD', 'IMAP_URL']
+    for var in required_vars:
+        if not os.getenv(var):
+            raise ValueError(f"Environment variable {var} is not set")
+
 def main():
     logger.info("Starting the email processing script")
-    branch = os.getenv("DOGSHEEP_BRANCH", "test-myfitnesspal-export")
+    validate_environment_variables()
+    branch = "main"
     mail = connect_to_email()
     
     try:
