@@ -1,0 +1,4 @@
+name: Export Typefully Data
+
+on:
+  workflow_dispatch:
