@@ -243,7 +243,9 @@ def commit_untracked_files_to_repo(repo_dir: str, script_name: str):
 
         # Get a list of all untracked files in the extract_dir
         untracked_files = repo.untracked_files
-        print(f"Untracked files: {untracked_files}")
+        print(f"Untracked files:")
+        for file in untracked_files:
+            print("\t",file)
 
         if untracked_files:
             # Stage only untracked files
