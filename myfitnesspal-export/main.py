@@ -230,12 +230,6 @@ def extract_date_range_from_filename(zip_path: str) -> str:
     date_range = filename.split("File-Export-")[-1].split(".zip")[0]
     return date_range
 
-import os
-from git import Repo, InvalidGitRepositoryError
-import logging
-
-logger = logging.getLogger(__name__)
-
 def commit_untracked_files_to_repo(repo_dir: str, script_name: str):
     """Commit only untracked files in the dogsheep-data repository."""
     try:
@@ -274,17 +268,13 @@ def commit_untracked_files_to_repo(repo_dir: str, script_name: str):
     except Exception as e:
         logger.error(f"Failed to commit untracked files: {e}")
 
-
-
 def format_date_for_folder(date_str: str) -> str:
     """Format the email date string for use in a folder name."""
     date_obj = email.utils.parsedate_to_datetime(date_str)
     return date_obj.strftime('%Y%m%d_%H%M%S')
 
-def process_emails(mail: imaplib.IMAP4_SSL, branch: str):
+def process_emails(emails:List[Tuple[str, str, Message]]):
     """Process all relevant emails."""
-    repo_dir = clone_dogsheep_data(branch)
-    emails = search_and_fetch_emails(mail, FROM_ADDRESS, SUBJECT)
     for message_id, download_link, email_message in emails:
         logger.info(f"{message_id}: Download link: {download_link}")
         # Format the date for the folder name
@@ -294,12 +284,9 @@ def process_emails(mail: imaplib.IMAP4_SSL, branch: str):
         if zip_path:
             # Set the extraction directory and write metadata
             extract_dir = os.path.join(SAVE_DIR, f"{formatted_date}_{os.path.splitext(os.path.basename(zip_path))[0]}_{message_id}")
-
             write_extracted_files(zip_path, extract_dir, message_id, email_message)
         else:
             logger.warning(f"{message_id}: Skipping processing due to expired download link.")
-        
-    commit_untracked_files_to_repo(repo_dir, os.path.basename(__file__))
 
 def validate_environment_variables():
     """Validate that all required environment variables are set."""
@@ -312,10 +299,20 @@ def main():
     logger.info("Starting the email processing script")
     validate_environment_variables()
     branch = "main"
-    mail = connect_to_email()
     
     try:
-        process_emails(mail, branch)
+        # Clone the dogsheep-data repository
+        repo_dir = clone_dogsheep_data(branch)
+        
+        # Connect to email
+        mail = connect_to_email()
+        emails = search_and_fetch_emails(mail, FROM_ADDRESS, SUBJECT)
+        # Process the emails
+        process_emails(emails)
+        
+        # Commit untracked files to the repository
+        commit_untracked_files_to_repo(repo_dir, os.path.basename(__file__))
+        
     finally:
         logger.info("Logging out from the email server")
         mail.logout()
