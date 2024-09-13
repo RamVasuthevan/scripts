@@ -59,13 +59,15 @@ def search_and_fetch_emails(
     mail.select("inbox", readonly=True)
     search_criteria: str = f'(FROM "{from_address}" SUBJECT "{subject}")'
     charset = None
-    status: str; email_ids_data: List[bytes] = mail.search(charset, search_criteria)
+    status: str
+    email_ids_data: List[bytes] = mail.search(charset, search_criteria)
     email_ids: List[bytes] = email_ids_data[0].split()
     logger.info(f"Search completed. Number of emails found: {len(email_ids)}")
 
     emails = []
     for mail_id in email_ids:
-        status: str; msg_data: List[Tuple[bytes, bytes]] = mail.fetch(mail_id, "(RFC822)")
+        status: str
+        msg_data: List[Tuple[bytes, bytes]] = mail.fetch(mail_id, "(RFC822)")
         for response_part in msg_data:
             if isinstance(response_part, tuple):
                 msg_bytes = response_part[1]
@@ -335,7 +337,7 @@ def validate_environment_variables():
 
 def main():
     logger.info("Starting the email processing script")
-   
+
     branch = "main"
 
     try:
