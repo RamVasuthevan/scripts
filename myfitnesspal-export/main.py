@@ -3,7 +3,7 @@ import email
 from email.message import Message
 from dotenv import load_dotenv
 import os
-from typing import List, Optional
+from typing import List, Optional, Tuple, Union
 from bs4 import BeautifulSoup
 import logging
 import requests
@@ -59,13 +59,13 @@ def search_and_fetch_emails(
     mail.select("inbox", readonly=True)
     search_criteria: str = f'(FROM "{from_address}" SUBJECT "{subject}")'
     charset = None
-    status, email_ids_tuple = mail.search(charset, search_criteria)
-    email_ids: List[bytes] = email_ids_tuple[0].split()
+    status: str; email_ids_data: List[bytes] = mail.search(charset, search_criteria)
+    email_ids: List[bytes] = email_ids_data[0].split()
     logger.info(f"Search completed. Number of emails found: {len(email_ids)}")
 
     emails = []
     for mail_id in email_ids:
-        status, msg_data = mail.fetch(mail_id, "(RFC822)")
+        status: str; msg_data: List[Tuple[bytes, bytes]] = mail.fetch(mail_id, "(RFC822)")
         for response_part in msg_data:
             if isinstance(response_part, tuple):
                 msg_bytes = response_part[1]
