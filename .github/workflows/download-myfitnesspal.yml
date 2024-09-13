@@ -1,0 +1,29 @@
+name: MyFitnessPal Export
+
+on:
+  schedule:
+    - cron: '0 */6 * * *'  # Run every 6 hours
+
+jobs:
+  run-export:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.10'
+
+    - name: Install dependencies
+      run: |
+        pip install pipenv
+        pipenv install
+
+    - name: Run MyFitnessPal export script
+      env:
+        EMAIL_USER: ${{ secrets.EMAIL_USER }}
+        EMAIL_PASSWORD: ${{ secrets.EMAIL_PASSWORD }}
+        IMAP_URL: ${{ secrets.IMAP_URL }}
+      run: pipenv run python main.py
