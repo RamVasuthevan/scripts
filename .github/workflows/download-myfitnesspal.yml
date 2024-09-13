@@ -3,9 +3,7 @@ name: MyFitnessPal Export
 on:
   schedule:
     - cron: '0 */6 * * *'  # Run every 6 hours
-  pull_request:
   workflow_dispatch:
-  push:
 
 jobs:
   run-export:
@@ -25,6 +23,7 @@ jobs:
         pipenv install
 
     - name: Run MyFitnessPal export script
+      working-directory: ./myfitnesspal-export
       env:
         EMAIL_USER: ${{ secrets.EMAIL_USER }}
         EMAIL_PASSWORD: ${{ secrets.EMAIL_PASSWORD }}
