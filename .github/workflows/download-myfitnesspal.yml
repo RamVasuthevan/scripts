@@ -28,9 +28,9 @@ jobs:
     - name: Run MyFitnessPal export script
       working-directory: ./myfitnesspal-export
       env:
-        EMAIL_USER: ${{ secrets.EMAIL_USER }}
-        EMAIL_PASSWORD: ${{ secrets.EMAIL_PASSWORD }}
-        IMAP_URL: ${{ secrets.IMAP_URL }}
+        EMAIL_USER: ${{ secrets.myfitnesspal_export_EMAIL_USER }}
+        EMAIL_PASSWORD: ${{ secrets.myfitnesspal_export_MAIL_PASSWORD }}
+        IMAP_URL: ${{ secrets.myfitnesspal_export_IMAP_URL }}
         GH_PAT: ${{ secrets.GH_PAT }}
       run: |
         git config --global url."https://${{ secrets.PAT_TOKEN }}@github.com/".insteadOf "https://github.com/"
