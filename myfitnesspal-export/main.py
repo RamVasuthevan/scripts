@@ -52,21 +52,24 @@ def search_and_fetch_emails(
     mail: imaplib.IMAP4_SSL, from_address: str, subject: str
 ) -> List[Tuple[str, str, Message]]:
     """Search for emails from a specific sender with a specific subject and process them."""
+
     logger.info(
         f"Searching and fetching emails from '{from_address}' with subject '{subject}'"
     )
     mail.select("inbox", readonly=True)
-    search_criteria = f'(FROM "{from_address}" SUBJECT "{subject}")'
-    status, messages = mail.search(None, search_criteria)
-    email_ids = messages[0].split()
+    search_criteria: str = f'(FROM "{from_address}" SUBJECT "{subject}")'
+    charset = None
+    status: str; email_ids_tuple: Optional[bytes] = mail.search(charset, search_criteria)
+    email_ids: List[bytes] = email_ids_tuple[0].split()
     logger.info(f"Search completed. Number of emails found: {len(email_ids)}")
 
     emails = []
     for mail_id in email_ids:
-        status, msg_data = mail.fetch(mail_id, "(RFC822)")
+        status: str; msg_data: List[Tuple[bytes, bytes]]  = mail.fetch(mail_id, "(RFC822)")
         for response_part in msg_data:
             if isinstance(response_part, tuple):
-                msg = email.message_from_bytes(response_part[1])
+                headers: bytes; msg_bytes: bytes = response_part
+                msg = email.message_from_bytes(msg_bytes)
                 message_id: str = msg.get("Message-ID")
                 date: str = msg.get("Date")
 
@@ -333,11 +336,11 @@ def main():
 
     try:
         # Clone the dogsheep-data repository
-        repo_dir = clone_dogsheep_data(branch)
+        repo_dir: str = clone_dogsheep_data(branch)
 
         # Connect to email
-        mail = connect_to_email()
-        emails = search_and_fetch_emails(mail, FROM_ADDRESS, SUBJECT)
+        mail: imaplib.IMAP4_SSL = connect_to_email()
+        emails: List[Tuple[str, str, Message]] = search_and_fetch_emails(mail, FROM_ADDRESS, SUBJECT)
         # Process the emails
         process_emails(emails)
 
