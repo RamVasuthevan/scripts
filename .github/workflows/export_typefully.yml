@@ -1,0 +1,8 @@
+name: Export Typefully Data
+
+jobs:
+  minimal_job:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Hello, World!
+        run: echo "Hello, World!"

@@ -27,9 +27,11 @@ logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s - %(name)s - %(filename)s (%(lineno)d) - %(levelname)s - %(message)s",
     handlers=[logging.FileHandler(LOG_FILE)],
+    handlers=[logging.FileHandler(LOG_FILE)],
 )
 
 logger = logging.getLogger(__name__)
+
 
 
 def connect_to_email() -> imaplib.IMAP4_SSL:
@@ -37,6 +39,9 @@ def connect_to_email() -> imaplib.IMAP4_SSL:
     load_dotenv()
     validate_environment_variables()
 
+    email_user: str = os.getenv("EMAIL_USER")
+    email_password: str = os.getenv("EMAIL_PASSWORD")
+    imap_url: str = os.getenv("IMAP_URL")
     email_user: str = os.getenv("EMAIL_USER")
     email_password: str = os.getenv("EMAIL_PASSWORD")
     imap_url: str = os.getenv("IMAP_URL")
@@ -81,44 +86,59 @@ def search_and_fetch_emails(
     return emails
 
 
+
 def process_multipart_email(msg: Message) -> Optional[str]:
     """Process a multipart email and extract the download link."""
     for part in msg.walk():
+        if part.get_content_type() == "text/html":
         if part.get_content_type() == "text/html":
             html_content: str = part.get_payload(decode=True).decode()
             return extract_and_return_link(html_content)
     return None
 
 
+
 def process_singlepart_email(msg: Message) -> Optional[str]:
     """Process a single-part email and extract the download link."""
+    if msg.get_content_type() == "text/html":
     if msg.get_content_type() == "text/html":
         html_content: str = msg.get_payload(decode=True).decode()
         return extract_and_return_link(html_content)
     return None
 
 
+
 def extract_and_return_link(html_content: str) -> Optional[str]:
     """Extract and return the download link from the HTML content."""
     soup = BeautifulSoup(html_content, "lxml")
     body_div = soup.find("div", class_="mfp-default--body")
+    soup = BeautifulSoup(html_content, "lxml")
+    body_div = soup.find("div", class_="mfp-default--body")
     if body_div:
+        download_link = body_div.find("a", string="Download Files")
         download_link = body_div.find("a", string="Download Files")
         if download_link:
             return download_link["href"]
+            return download_link["href"]
     return None
+
 
 
 def get_filename_from_content_disposition(headers) -> Optional[str]:
     """Extract the filename from the Content-Disposition header."""
     content_disposition = headers.get("Content-Disposition")
+    content_disposition = headers.get("Content-Disposition")
     if content_disposition:
+        parts = content_disposition.split(";")
         parts = content_disposition.split(";")
         for part in parts:
             if "filename=" in part:
                 filename = part.split("=")[1].strip('"')
+            if "filename=" in part:
+                filename = part.split("=")[1].strip('"')
                 return filename
     return None
+
 
 
 def get_filename_from_url(url: str) -> str:
@@ -128,10 +148,12 @@ def get_filename_from_url(url: str) -> str:
     return unquote(filename)  # Decodes URL-encoded characters
 
 
+
 def download_file(url: str, save_dir: str) -> Optional[str]:
     """Download a file from the given URL and return the path where it was saved."""
     logger.info(f"Starting download from {url}")
     response = requests.get(url, stream=True)
+
 
     if response.status_code == 403 and "Request has expired" in response.text:
         logger.info(f"Download link has expired: {url}")
@@ -139,6 +161,9 @@ def download_file(url: str, save_dir: str) -> Optional[str]:
 
     if response.status_code == 200:
         # Attempt to get the filename from the Content-Disposition header
+        filename: Optional[str] = get_filename_from_content_disposition(
+            response.headers
+        )
         filename: Optional[str] = get_filename_from_content_disposition(
             response.headers
         )
@@ -154,6 +179,7 @@ def download_file(url: str, save_dir: str) -> Optional[str]:
         logger.info(f"Saving file as {save_path}")
 
         with open(save_path, "wb") as file:
+        with open(save_path, "wb") as file:
             for chunk in response.iter_content(chunk_size=1024):
                 if chunk:
                     file.write(chunk)
@@ -164,7 +190,11 @@ def download_file(url: str, save_dir: str) -> Optional[str]:
         logger.error(
             f"Failed to download file from {url}. Status code: {response.status_code}"
         )
+        logger.error(
+            f"Failed to download file from {url}. Status code: {response.status_code}"
+        )
         return None
+
 
 
 def get_script_info() -> dict:
@@ -175,14 +205,18 @@ def get_script_info() -> dict:
     try:
         repo = Repo(os.path.dirname(__file__), search_parent_directories=True)
 
+
         # Get the current commit hash
         commit_hash = repo.head.commit.hexsha
+
 
         # Check if there are uncommitted changes
         uncommitted_changes = repo.is_dirty(untracked_files=True)
 
+
         # Get the remote origin URL (i.e., the repository URL)
         repo_url = next(repo.remote().urls)
+
 
         return {
             "repository": repo_url,
@@ -198,6 +232,7 @@ def get_script_info() -> dict:
         }
 
 
+
 def clone_dogsheep_data(branch: str) -> str:
     """Clone the dogsheep-data repository to a temporary directory."""
     repo_dir = "dogsheep-data"
@@ -211,11 +246,16 @@ def clone_dogsheep_data(branch: str) -> str:
 def write_extracted_files(
     zip_path: str, extract_dir: str, message_id: str, email_message: Message
 ):
+
+def write_extracted_files(
+    zip_path: str, extract_dir: str, message_id: str, email_message: Message
+):
     """Extract the ZIP file, write metadata about the email, and delete the ZIP file."""
     # Ensure the extract directory exists
     os.makedirs(extract_dir, exist_ok=True)
 
     # Extract the contents of the ZIP file
+    with zipfile.ZipFile(zip_path, "r") as zip_ref:
     with zipfile.ZipFile(zip_path, "r") as zip_ref:
         zip_ref.extractall(extract_dir)
         logger.info(f"Extracted contents of {zip_path} to {extract_dir}")
@@ -235,12 +275,14 @@ def write_extracted_files(
     }
     metadata_path = os.path.join(extract_dir, "metadata.json")
     with open(metadata_path, "w") as metadata_file:
+    with open(metadata_path, "w") as metadata_file:
         json.dump(metadata, metadata_file, indent=4)
     logger.info(f"Wrote metadata to {metadata_path}")
 
     # Delete the ZIP file
     os.remove(zip_path)
     logger.info(f"Deleted the ZIP file: {zip_path}")
+
 
 
 def extract_date_range_from_filename(zip_path: str) -> str:
@@ -257,6 +299,9 @@ def commit_untracked_files_to_repo(repo_dir: str, script_name: str):
 
         # Get a list of all untracked files in the extract_dir
         untracked_files = repo.untracked_files
+        print(f"Untracked files:")
+        for file in untracked_files:
+            print("\t", file)
         print(f"Untracked files:")
         for file in untracked_files:
             print("\t", file)
@@ -279,6 +324,7 @@ def commit_untracked_files_to_repo(repo_dir: str, script_name: str):
             repo.index.commit(commit_message)
             # Push the changes
             origin = repo.remote(name="origin")
+            origin = repo.remote(name="origin")
             origin.push()
             logger.info(f"Committed and pushed untracked files for MyFitnessPal Export")
         else:
@@ -292,6 +338,8 @@ def commit_untracked_files_to_repo(repo_dir: str, script_name: str):
 def format_date_for_folder(date_str: str) -> str:
     """Format the email date string for use in a folder name."""
     date_obj = email.utils.parsedate_to_datetime(date_str)
+    return date_obj.strftime("%Y%m%d_%H%M%S")
+
     return date_obj.strftime("%Y%m%d_%H%M%S")
 
 
@@ -360,6 +408,7 @@ def main():
     finally:
         logger.info("Logging out from the email server")
         mail.logout()
+
 
 
 if __name__ == "__main__":
