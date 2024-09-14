@@ -71,7 +71,7 @@ def search_and_fetch_emails(
         status: str
         msg_data: List[Tuple[bytes, bytes]]
         status, msg_data = mail.fetch(mail_id, "(RFC822)")
-        
+
         for response_part in msg_data:
             if isinstance(response_part, tuple):
                 msg_bytes = response_part[1]
