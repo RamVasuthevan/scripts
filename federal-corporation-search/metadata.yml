@@ -1,0 +1,51 @@
+databases:
+  canadian_corps:
+    queries:
+      business_numbers_with_letters:
+        sql: |-
+          SELECT corporation_id, business_number
+          FROM corporations
+          WHERE business_number GLOB '*[A-Za-z]*'
+          ORDER BY corporation_id
+          LIMIT 101
+        title: Business Numbers Containing Letters
+        description: This query returns corporation IDs and business numbers where the business number contains at least one letter.
+      
+      unique_characters_in_ids_sorted:
+        sql: |-
+          WITH RECURSIVE
+          chars(source, str, pos) AS (
+            SELECT 'corporation_id', corporation_id, 1 FROM corporations
+            UNION ALL
+            SELECT 'business_number', business_number, 1 FROM corporations
+            UNION ALL
+            SELECT source, str, pos+1 FROM chars WHERE pos < length(str)
+          ),
+          unique_chars AS (
+            SELECT DISTINCT source, substr(str, pos, 1) AS char
+            FROM chars
+            WHERE char != ''
+          ),
+          sorted_chars AS (
+            SELECT source, group_concat(char, '') AS sorted_chars
+            FROM (
+              SELECT source, char
+              FROM unique_chars
+              WHERE char != ' '
+              ORDER BY char
+            )
+            GROUP BY source
+          )
+          SELECT 
+            (SELECT sorted_chars FROM sorted_chars WHERE source = 'corporation_id') AS corporation_id_chars,
+            (SELECT sorted_chars FROM sorted_chars WHERE source = 'business_number') AS business_number_chars;
+        title: Unique Characters in Corporation IDs and Business Numbers
+        description: This query returns all unique characters found in corporation IDs and business numbers, sorted alphabetically and separated into two columns.
+      
+      count_null_or_empty_business_numbers:
+        sql: |-
+          SELECT COUNT(corporation_id) as Count
+          FROM corporations 
+          WHERE business_number IS NULL OR business_number = '';
+        title: Empty Business Numbers in Corporations
+        description: This query counts the number of corporations with null or empty business numbers.
