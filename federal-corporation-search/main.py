@@ -151,7 +151,7 @@ def process_names(c: sqlite3.Cursor, corp_id: str, corporation: ET.Element, file
         return
     for name in names:
         c.execute("INSERT INTO names VALUES (?, ?, ?, ?, ?, ?)",
-                  (corp_id, name.text, name.get('code'), name.get('current') == 'true',
+                  (corp_id, name.text, name.get('code'), "TRUE" if name.get('current') == 'true' else "FALSE",
                    name.get('effectiveDate'), name.get('expiryDate')))
 
 def process_addresses(c: sqlite3.Cursor, corp_id: str, corporation: ET.Element, file_path: str) -> None:
