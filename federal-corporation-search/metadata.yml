@@ -44,8 +44,22 @@ databases:
       
       count_null_or_empty_business_numbers:
         sql: |-
-          SELECT COUNT(corporation_id) as Count
+          SELECT COUNT(corporation_id) 
           FROM corporations 
           WHERE business_number IS NULL OR business_number = '';
-        title: Empty Business Numbers in Corporations
+        title: Count of Null or Empty Business Numbers
         description: This query counts the number of corporations with null or empty business numbers.
+      
+      duplicate_name_records:
+        sql: |-
+          WITH counts AS (
+            SELECT corporation_id, name, code, effective_date, expiry_date,
+                   COUNT(*) OVER (PARTITION BY corporation_id, name, code, effective_date, expiry_date) as count
+            FROM names
+          )
+          SELECT corporation_id, name, code, effective_date, expiry_date
+          FROM counts
+          WHERE count > 1
+          ORDER BY corporation_id, effective_date, expiry_date
+        title: Duplicate Name Records
+        description: This query returns records with duplicate names, effective dates, and expiry dates.
