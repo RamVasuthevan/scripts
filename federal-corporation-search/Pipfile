@@ -5,6 +5,8 @@ name = "pypi"
 
 [packages]
 datasette = "*"
+datasette-search-all = "*"
+sqlite-utils = "*"
 
 [dev-packages]
 

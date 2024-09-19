@@ -4,6 +4,7 @@ import logging
 import os
 from datetime import datetime
 from typing import Optional
+import sqlite_utils
 
 # Configure logging
 LOG_DIR = "logs"
@@ -26,7 +27,7 @@ logging.getLogger().addHandler(console_handler)
 
 # Define the namespace
 NS = {'cc': 'http://www.ic.gc.ca/corpcan'}
-DB_NAME = 'canadian_corps.db' + datetime.now().strftime('%Y%m%d_%H%M%S')
+DB_NAME = 'canadian_corps.db'
 
 def create_database() -> sqlite3.Connection:
     if os.path.exists(DB_NAME):
@@ -145,6 +146,7 @@ def get_business_number(corporation: ET.Element) -> Optional[str]:
         elif len(business_number_elements) == 1:
             return business_number_elements[0].text
     return None
+
 def process_names(c: sqlite3.Cursor, corp_id: str, corporation: ET.Element, file_path: str) -> None:
     names = corporation.findall('.//name', NS)
     if not names:
@@ -280,7 +282,43 @@ def log_final_stats() -> None:
     conn.close()
     logging.info("Processing complete.")
 
+def optimize_database() -> None:
+    logging.info(f"Starting database optimization for {DB_NAME}")
+    db = sqlite_utils.Database(DB_NAME)
+    
+    for table_name in db.table_names():
+        table = db[table_name]
+        columns = [col.name for col in table.columns]
+        
+        logging.info(f"Enabling FTS for table '{table_name}' on all columns: {', '.join(columns)}")
+        try:
+            # Check if FTS is already enabled
+            if table.detect_fts():
+                logging.info(f"FTS already exists for table '{table_name}'. Updating...")
+                table.disable_fts()
+            
+            table.enable_fts(columns, create_triggers=True, tokenize="porter")
+            logging.info(f"FTS enabled successfully for table '{table_name}'")
+        except sqlite3.OperationalError as e:
+            logging.error(f"Error enabling FTS for table '{table_name}': {str(e)}")
+            logging.info(f"Attempting to get more information about '{table_name}'")
+            try:
+                table_info = db.execute(f"PRAGMA table_info({table_name})").fetchall()
+                logging.info(f"Table info for '{table_name}': {table_info}")
+                fts_info = db.execute(f"PRAGMA table_info({table_name}_fts)").fetchall()
+                logging.info(f"FTS table info for '{table_name}_fts': {fts_info}")
+            except Exception as inner_e:
+                logging.error(f"Error getting table info: {str(inner_e)}")
+
+    # Optimize the database
+    logging.info("Vacuuming the database...")
+    db.vacuum()
+    logging.info("Database optimization complete.")
+
 if __name__ == "__main__":
     xml_directory = "OPEN_DATA_SPLIT"
+    logging.info("Starting Canadian Corporations Database processing")
     process_all_files(xml_directory)
     log_final_stats()
+    optimize_database()
+    logging.info("All processing complete.")
