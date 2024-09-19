@@ -47,8 +47,8 @@ def create_database() -> sqlite3.Connection:
             name TEXT,
             code TEXT,
             current BOOLEAN,
-            effective_date TEXT,
-            expiry_date TEXT,
+            effective_date DATETIME,
+            expiry_date DATETIME,
             FOREIGN KEY (corporation_id) REFERENCES corporations(corporation_id)
         );
         
@@ -67,13 +67,13 @@ def create_database() -> sqlite3.Connection:
         CREATE TABLE activities (
             corporation_id INTEGER,
             code TEXT,
-            date TEXT,
+            date DATETIME,
             FOREIGN KEY (corporation_id) REFERENCES corporations(corporation_id)
         );
 
         CREATE TABLE annual_returns (
             corporation_id INTEGER,
-            annual_meeting_date TEXT,
+            annual_meeting_date DATETIME,
             type_of_corporation_code TEXT,
             FOREIGN KEY (corporation_id) REFERENCES corporations(corporation_id)
         );
@@ -153,9 +153,12 @@ def process_names(c: sqlite3.Cursor, corp_id: str, corporation: ET.Element, file
         logging.warning(f"Corporation {corp_id} has no names in file {file_path}")
         return
     for name in names:
+        effective_date = parse_date(name.get('effectiveDate'))
+        expiry_date = parse_date(name.get('expiryDate'))
         c.execute("INSERT INTO names VALUES (?, ?, ?, ?, ?, ?)",
-                  (corp_id, name.text, name.get('code'), "TRUE" if name.get('current') == 'true' else "FALSE",
-                   name.get('effectiveDate'), name.get('expiryDate')))
+                  (corp_id, name.text, name.get('code'), 
+                   "TRUE" if name.get('current') == 'true' else "FALSE",
+                   effective_date, expiry_date))
 
 def process_addresses(c: sqlite3.Cursor, corp_id: str, corporation: ET.Element, file_path: str) -> None:
     addresses = corporation.findall('.//address', NS)
@@ -187,8 +190,9 @@ def process_activities(c: sqlite3.Cursor, corp_id: str, corporation: ET.Element,
         logging.warning(f"Corporation {corp_id} has no activities in file {file_path}")
         return
     for activity in activities:
+        activity_date = parse_date(activity.get('date'))
         c.execute("INSERT INTO activities VALUES (?, ?, ?)",
-                  (corp_id, activity.get('code'), activity.get('date')))
+                  (corp_id, activity.get('code'), activity_date))
 
 def process_annual_returns(c: sqlite3.Cursor, corp_id: str, corporation: ET.Element, file_path: str) -> None:
     annual_returns = corporation.find('.//annualReturns', NS)
@@ -199,7 +203,7 @@ def process_annual_returns(c: sqlite3.Cursor, corp_id: str, corporation: ET.Elem
         type_of_corporation = annual_return.find('typeOfCorporation', NS)
         c.execute("INSERT INTO annual_returns VALUES (?, ?, ?)",
                   (corp_id, 
-                   annual_meeting_date.text if annual_meeting_date is not None else None,
+                   parse_date(annual_meeting_date.text) if annual_meeting_date is not None else None,
                    type_of_corporation.get('code') if type_of_corporation is not None else None))
 
 def process_acts(c: sqlite3.Cursor, corp_id: str, corporation: ET.Element, file_path: str) -> None:
@@ -229,6 +233,14 @@ def process_director_limits(c: sqlite3.Cursor, corp_id: str, corporation: ET.Ele
                   (corp_id, 
                    int(minimum.text) if minimum is not None else None,
                    int(maximum.text) if maximum is not None else None))
+
+def parse_date(date_string: Optional[str]) -> Optional[datetime]:
+    if date_string:
+        try:
+            return datetime.strptime(date_string, "%Y-%m-%dT%H:%M:%S")
+        except ValueError:
+            logging.warning(f"Invalid date format: {date_string}")
+    return None
 
 def process_all_files(directory: str) -> None:
     if not os.path.exists(directory):
