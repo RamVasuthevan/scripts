@@ -1,0 +1,32 @@
+<corporation corporationId="16292721">
+   <acts>
+      <act code="6" current="true" effectiveDate="2024-08-15T16:44:02"/>
+   </acts>
+   <statuses>
+      <status code="1" current="true" effectiveDate="2024-08-15T16:44:02"/>
+   </statuses>
+   <activities>
+      <activity code="1" date="2024-08-15T16:44:02"/>
+   </activities>
+   <names>
+      <name code="1" current="true" effectiveDate="2024-08-15T16:44:02">16292721 CANADA INC.</name>
+   </names>
+   <addresses>
+      <address code="2" current="true" effectiveDate="2024-08-15T16:44:02">
+         <addressLine>751 Rue du Square-Victoria</addressLine>
+         <city>Montréal</city>
+         <province code="QC"/>
+         <country code="CA"/>
+         <postalCode>H2Y 2J3</postalCode>
+      </address>
+   </addresses>
+   <directorLimits>
+      <directorLimit current="true" effectiveDate="2024-08-15T16:44:02">
+         <minimum>1</minimum>
+         <maximum>10</maximum>
+      </directorLimit>
+   </directorLimits>
+   <businessNumbers>
+      <businessNumber>754441624</businessNumber>
+   </businessNumbers>
+</corporation>

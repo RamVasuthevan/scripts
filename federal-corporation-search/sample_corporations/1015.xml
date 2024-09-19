@@ -1,0 +1,50 @@
+<corporation corporationId="1015">
+   <annualReturns>
+      <annualReturn annualMeetingDate="2024-03-20T00:00:00" yearOfFiling="2024"/>
+      <annualReturn annualMeetingDate="2020-02-20T00:00:00" yearOfFiling="2020"/>
+      <annualReturn annualMeetingDate="2019-02-27T00:00:00" yearOfFiling="2019"/>
+   </annualReturns>
+   <acts>
+      <act code="8" effectiveDate="1953-12-14T23:59:59" expiryDate="1953-12-15T00:00:00"/>
+   </acts>
+   <statuses>
+      <status code="1" current="true" effectiveDate="1953-12-15T00:00:00"/>
+   </statuses>
+   <activities>
+      <activity code="1" date="1953-12-15T00:00:00"/>
+      <activity code="114" date="2016-03-23T00:00:00"/>
+   </activities>
+   <names>
+      <name code="1" effectiveDate="1953-12-15T00:00:00" expiryDate="1995-08-22T00:00:00">Chambre de Commerce d'Acton Vale</name>
+      <name code="1" current="true" effectiveDate="1995-08-22T00:00:00">Chambre de commerce de la Région d'Acton</name>
+   </names>
+   <addresses>
+      <address code="2" effectiveDate="1995-08-23T00:00:00" expiryDate="2007-03-31T13:43:00">
+         <addressLine>960  BOULAY</addressLine>
+         <city>ACTON VALE</city>
+         <province code="QC"/>
+         <country code="CA"/>
+         <postalCode>J0H 1A0</postalCode>
+      </address>
+      <address code="2" effectiveDate="2007-03-31T13:43:00" expiryDate="2018-03-31T09:58:00">
+         <addressLine>1053 ST-ANDRE</addressLine>
+         <city>ACTON VALE</city>
+         <province code="QC"/>
+         <country code="CA"/>
+         <postalCode>J0H 1A0</postalCode>
+      </address>
+      <address code="2" current="true" effectiveDate="2018-03-31T09:58:00">
+         <addressLine>980 RUE BOULAY</addressLine>
+         <city>ACTON VALE</city>
+         <province code="QC"/>
+         <country code="CA"/>
+         <postalCode>J0H 1A0</postalCode>
+      </address>
+   </addresses>
+   <directorLimits>
+      <directorLimit current="true" effectiveDate="1999-10-27T07:37:11">
+         <minimum>3</minimum>
+         <maximum>10</maximum>
+      </directorLimit>
+   </directorLimits>
+</corporation>
