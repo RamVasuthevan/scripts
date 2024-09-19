@@ -139,11 +139,12 @@ def process_corporation(c: sqlite3.Cursor, corp_id: str, corporation: ET.Element
 def get_business_number(corporation: ET.Element) -> Optional[str]:
     business_numbers = corporation.find('.//businessNumbers', NS)
     if business_numbers is not None:
-        business_number = business_numbers.find('businessNumber', NS)
-        if business_number is not None:
-            return business_number.text
+        business_number_elements = business_numbers.findall('businessNumber', NS)
+        if len(business_number_elements) > 1:
+            raise ValueError(f"Multiple business numbers found for corporation {corporation.get('corporationId')}")
+        elif len(business_number_elements) == 1:
+            return business_number_elements[0].text
     return None
-
 def process_names(c: sqlite3.Cursor, corp_id: str, corporation: ET.Element, file_path: str) -> None:
     names = corporation.findall('.//name', NS)
     if not names:
