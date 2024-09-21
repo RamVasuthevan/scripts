@@ -321,6 +321,38 @@ def optimize_database() -> None:
                 logging.info(f"FTS table info for '{table_name}_fts': {fts_info}")
             except Exception as inner_e:
                 logging.error(f"Error getting table info: {str(inner_e)}")
+    
+    # Add individual indexes to names table
+    logging.info("Adding individual indexes to names table...")
+    columns_to_index = ['corporation_id', 'name', 'current', 'effective_date', 'expiry_date']
+    for column in columns_to_index:
+        try:
+            db.execute(f"""
+                CREATE INDEX IF NOT EXISTS idx_names_{column} 
+                ON names ({column})
+            """)
+            logging.info(f"Index added successfully on names.{column}")
+        except sqlite3.OperationalError as e:
+            logging.error(f"Error adding index on names.{column}: {str(e)}")
+    
+    # Sort names table
+    logging.info("Sorting names table...")
+    try:
+        db.execute("""
+            CREATE TABLE names_sorted AS 
+            SELECT * FROM names 
+            ORDER BY corporation_id, effective_date, expiry_date, code
+        """)
+        db.execute("DROP TABLE names")
+        db.execute("ALTER TABLE names_sorted RENAME TO names")
+        logging.info("Names table sorted successfully")
+    except sqlite3.OperationalError as e:
+        logging.error(f"Error sorting names table: {str(e)}")
+
+    # Optimize the database
+    logging.info("Vacuuming the database...")
+    db.vacuum()
+    logging.info("Database optimization complete.")
 
     # Optimize the database
     logging.info("Vacuuming the database...")
