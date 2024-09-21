@@ -63,3 +63,15 @@ databases:
           ORDER BY corporation_id, effective_date, expiry_date
         title: Duplicate Name Records
         description: This query returns records with duplicate names, effective dates, and expiry dates.
+
+      names_with_non_zero_time:
+        sql: |-
+            SELECT rowid, corporation_id, name, code, current, effective_date, expiry_date
+            FROM names
+            WHERE 
+              (strftime('%H:%M:%S', effective_date) != '00:00:00' OR
+              strftime('%H:%M:%S', expiry_date) != '00:00:00')
+            ORDER BY effective_date
+            LIMIT 101
+          title: effective_date or expiry_date with Non-Zero Time in Dates
+        description: This query returns name records where either the effective_date or expiry_date has a time component that is not 00:00:00.
