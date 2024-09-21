@@ -38,6 +38,10 @@ Attributes:
 - current: xs:boolean (optional)
 Type: xs:string
 
+There are two effective_dates `0977-04-18 00:00:00` and `0981-12-10 00:00:00` which seems to betypos.
+
+Almost all effectiveDate and expiryDate have time 00:00:00.
+ 
 ### businessNumbers
 Container for businessNumber elements
 Child elements:
