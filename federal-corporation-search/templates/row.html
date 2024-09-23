@@ -1,0 +1,93 @@
+{% extends "default:row.html" %}
+
+{% block content %}
+    {{ super() }}
+
+    {% for table_info in foreign_key_tables %}
+        {% if table_info.count > 0 %}
+            <h3>
+                {% set json_url = table_info.link.split('?')[0] + '.json?' + table_info.link.split('?')[1] %}
+                <a href="{{ table_info.link }}">
+                    {{ table_info.count }} reference{% if table_info.count > 1 %}s{% endif %}
+                </a> 
+                 in {{ table_info.other_table | capitalize }}
+            </h3>
+            <div id="{{ table_info.other_table }}-data-table"></div>
+        {% endif %}
+    {% endfor %}
+
+    <script>
+        const NUM_RESULTS = 5;
+
+        async function fetchAndDisplayTable(url, tableId, totalResults) {
+            try {
+                console.log(`Fetching data from: ${url}`);  // Log the URL
+                const response = await fetch(url);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                const data = await response.json();
+                displayTable(data, tableId, totalResults);
+            } catch (error) {
+                console.error(`Error fetching data for ${tableId}:`, error);
+                document.getElementById(tableId).innerHTML = '<p>Error loading table data.</p>';
+            }
+        }
+
+        function displayTable(data, tableId, totalResults) {
+            const rows = data.rows.slice(0, NUM_RESULTS); // Limit to NUM_RESULTS
+            const columns = data.columns;
+
+            // Create a table and append it to the specified div
+            let tableHtml = '<table border="1" cellpadding="5">';
+            
+            // Generate the header row
+            tableHtml += '<thead><tr>';
+            columns.forEach(column => {
+                tableHtml += `<th>${column}</th>`;
+            });
+            tableHtml += '</tr></thead>';
+
+            // Generate the rows
+            tableHtml += '<tbody>';
+            rows.forEach(row => {
+                tableHtml += '<tr>';
+                row.forEach((cellData, index) => {
+                    // Handle null values and object conversion
+                    cellData = cellData !== null ? cellData : 'N/A';
+                    tableHtml += `<td>${cellData}</td>`;
+                });
+                tableHtml += '</tr>';
+            });
+            tableHtml += '</tbody>';
+            tableHtml += '</table>';
+
+            // Check if we need to add a "more results" link
+            if (totalResults > NUM_RESULTS) {
+                const moreResultsCount = totalResults - NUM_RESULTS;
+                const moreResultsUrl = data.query ? `${data.query.url}` : "#";
+                tableHtml += `<p><a href="${moreResultsUrl}">${moreResultsCount} more result${moreResultsCount > 1 ? 's' : ''}</a></p>`;
+            }
+
+            // Insert the table into the specified div
+            document.getElementById(tableId).innerHTML = tableHtml;
+        }
+
+        async function loadAllTables() {
+            const tableInfos = {{ foreign_key_tables | tojson }};
+            const fetchPromises = tableInfos.map(table_info => {
+                if (table_info.count > 0) {
+                    const jsonUrl = table_info.link.split('?')[0] + '.json?_size=' + NUM_RESULTS + '&' + table_info.link.split('?')[1];
+                    return fetchAndDisplayTable(jsonUrl, `${table_info.other_table}-data-table`, table_info.count);
+                }
+            });
+
+            // Wait for all fetches to complete
+            await Promise.all(fetchPromises);
+        }
+
+        // Start loading all tables
+        loadAllTables();
+    </script>
+
+{% endblock %}

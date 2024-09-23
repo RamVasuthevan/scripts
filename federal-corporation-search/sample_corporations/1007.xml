@@ -1,0 +1,54 @@
+<corporation corporationId="1007">
+   <annualReturns>
+      <annualReturn annualMeetingDate="2024-03-27T00:00:00" yearOfFiling="2024"/>
+      <annualReturn annualMeetingDate="2022-03-16T00:00:00" yearOfFiling="2022"/>
+      <annualReturn annualMeetingDate="2021-03-12T00:00:00" yearOfFiling="2021"/>
+   </annualReturns>
+   <acts>
+      <act code="8" effectiveDate="1947-01-09T23:59:59" expiryDate="1947-01-10T00:00:00"/>
+      <act code="8" current="true" effectiveDate="1947-01-10T00:00:00"/>
+   </acts>
+   <statuses>
+      <status code="1" current="true" effectiveDate="1947-01-10T00:00:00"/>
+   </statuses>
+   <activities>
+      <activity code="1" date="1947-01-10T00:00:00"/>
+      <activity code="114" date="2005-12-20T00:00:00"/>
+      <activity code="114" date="2007-03-20T00:00:00"/>
+      <activity code="114" date="2010-04-28T00:00:00"/>
+      <activity code="114" date="2011-02-04T00:00:00"/>
+      <activity code="114" date="2012-04-17T00:00:00"/>
+      <activity code="114" date="2022-07-05T00:00:00"/>
+   </activities>
+   <names>
+      <name code="1" effectiveDate="1991-12-27T00:00:00" expiryDate="1995-02-06T00:00:00">ABBOTSFORD-MATSQUI CHAMBER OF COMMERCE</name>
+      <name code="1" effectiveDate="1981-11-10T00:00:00" expiryDate="1991-12-27T00:00:00">ABBOTSFORD-CLEARBROOK CHAMBER OF COMMERCE</name>
+      <name code="1" effectiveDate="1947-01-10T00:00:00" expiryDate="1981-11-10T00:00:00">ABBOTSFORD AND DISTRICT CHAMBER OF COMMERCE</name>
+      <name code="1" current="true" effectiveDate="1995-02-06T00:00:00">Abbotsford Chamber of Commerce</name>
+   </names>
+   <addresses>
+      <address code="2" effectiveDate="1947-01-10T00:00:00" expiryDate="2007-03-20T13:11:00">
+         <addressLine>2462  MCCALLUM RD WERWERWER</addressLine>
+         <city>ABBOTSFORD</city>
+         <province code="BC"/>
+         <country code="CA"/>
+         <postalCode>V2S 3P9</postalCode>
+      </address>
+      <address code="2" current="true" effectiveDate="2007-03-20T13:11:00">
+         <addressLine>207 - 32900 SOUTH FRASER WAY</addressLine>
+         <city>ABBOTSFORD</city>
+         <province code="BC"/>
+         <country code="CA"/>
+         <postalCode>V2S 5A1</postalCode>
+      </address>
+   </addresses>
+   <directorLimits>
+      <directorLimit current="true" effectiveDate="1999-03-07T14:09:11">
+         <minimum>3</minimum>
+         <maximum>30</maximum>
+      </directorLimit>
+   </directorLimits>
+   <businessNumbers>
+      <businessNumber>106679285</businessNumber>
+   </businessNumbers>
+</corporation>
