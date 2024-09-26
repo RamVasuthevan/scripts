@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "1f1bee4cd68ee6857a85d5d067cdccede4f5817cdbe0db049ac6766c8a84de7e"
+            "sha256": "6eb3b4404ee5c8d9d851bcfba007f469d47d017918d9946ced1892a7840105c0"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -96,6 +96,14 @@
             "index": "pypi",
             "markers": "python_version >= '3.8'",
             "version": "==0.1a5"
+        },
+        "datasette-pretty-json": {
+            "hashes": [
+                "sha256:ead45c4840de41cbaa22b7977b9abad1f1ff0b5bc5fed975592ee41e2520f188",
+                "sha256:f23ef3eae6c0df13305368f716e5cb385050d8fbeceb6d0ebcf6618d60f2ddaf"
+            ],
+            "index": "pypi",
+            "version": "==0.3"
         },
         "h11": {
             "hashes": [

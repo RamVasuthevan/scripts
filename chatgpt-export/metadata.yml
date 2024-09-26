@@ -13,3 +13,6 @@ databases:
           - conversation_origin
           - voice
           - async_status
+
+plugins:
+  datasette-pretty-json: {}
