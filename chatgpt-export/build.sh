@@ -14,7 +14,9 @@ unzip -o 03b403637625862e5cdb3a922eda3a495a8caa6aafd5afb62c30327c722d251f-2024-0
 
 # Step 2: Insert conversations data (excluding mappings) into conversations table
 echo "Inserting main conversation data (without mappings) into conversations table..."
-sqlite-utils insert "$SCRIPT_DIR/export.db" conversations "$SCRIPT_DIR/conversations.json" --pk id
+jq '[.[] | del(.mapping)]' "$SCRIPT_DIR/conversations.json" > "$SCRIPT_DIR/conversations_clean.json"
+sqlite-utils insert "$SCRIPT_DIR/export.db" conversations "$SCRIPT_DIR/conversations_clean.json" --pk id
+rm "$SCRIPT_DIR/conversations_clean.json"
 
 # Step 3: Extract and insert mapping data into conversation_mappings table
 echo "Extracting and inserting mapping data into conversation_mappings table..."
