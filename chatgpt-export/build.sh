@@ -16,11 +16,16 @@ unzip -o 03b403637625862e5cdb3a922eda3a495a8caa6aafd5afb62c30327c722d251f-2024-0
 echo "Inserting main conversation data (without mappings) into conversations table..."
 sqlite-utils insert "$SCRIPT_DIR/export.db" conversations "$SCRIPT_DIR/conversations.json" --pk id
 
-# Step 3: Extract and insert mapping data into conversations_mappings table
-echo "Extracting and inserting mapping data into conversations_mappings table..."
+# Step 3: Extract and insert mapping data into conversation_mappings table
+echo "Extracting and inserting mapping data into conversation_mappings table..."
 jq '[.[] | . as $conv | .mapping | to_entries[] | {conversation_id: $conv.id, mapping_id: .key, mapping_data: .value}]' "$SCRIPT_DIR/conversations.json" > "$SCRIPT_DIR/conversation_mappings.json"
-sqlite-utils insert "$SCRIPT_DIR/export.db" conversation_mappings "$SCRIPT_DIR/conversation_mappings.json"
+sqlite-utils insert "$SCRIPT_DIR/export.db" conversation_mappings "$SCRIPT_DIR/conversation_mappings.json" \
+    --pk conversation_id --pk mapping_id
 rm "$SCRIPT_DIR/conversation_mappings.json"
+
+# Step 3.5: Add foreign key constraint
+echo "Adding foreign key constraint on conversation_id..."
+sqlite-utils add-foreign-key "$SCRIPT_DIR/export.db" conversation_mappings conversation_id conversations id
 
 # Step 4: Import other JSON files into export.db
 echo "Inserting data from model_comparisons.json with 'id' as primary key..."
@@ -37,7 +42,7 @@ sqlite-utils insert "$SCRIPT_DIR/export.db" message_feedback "$SCRIPT_DIR/messag
 
 # Check if all steps were successful
 if [ $? -eq 0 ]; then
-    echo "All files imported successfully with 'id' set as the primary key and mappings in a separate table!"
+    echo "All files imported successfully with correct primary and foreign keys set!"
 else
     echo "Error: Failed to import and normalize conversations.json"
     exit 1
