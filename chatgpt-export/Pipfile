@@ -1,0 +1,15 @@
+[[source]]
+url = "https://pypi.org/simple"
+verify_ssl = true
+name = "pypi"
+
+[packages]
+datasette = "*"
+datasette-import = "*"
+sqlite-utils = "*"
+datasette-pretty-json = "*"
+
+[dev-packages]
+
+[requires]
+python_version = "3.12"
