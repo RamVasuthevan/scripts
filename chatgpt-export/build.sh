@@ -18,9 +18,9 @@ sqlite-utils insert "$SCRIPT_DIR/export.db" conversations "$SCRIPT_DIR/conversat
 
 # Step 3: Extract and insert mapping data into conversations_mappings table
 echo "Extracting and inserting mapping data into conversations_mappings table..."
-jq '[.[] | {conversation_id: .id, mapping: .mapping} | .mapping | to_entries[] | {conversation_id: .conversation_id, mapping_id: .key, mapping_data: .value}]' "$SCRIPT_DIR/conversations.json" > "$SCRIPT_DIR/conversation_mappings.json"
+jq '[.[] | . as $conv | .mapping | to_entries[] | {conversation_id: $conv.id, mapping_id: .key, mapping_data: .value}]' "$SCRIPT_DIR/conversations.json" > "$SCRIPT_DIR/conversation_mappings.json"
 sqlite-utils insert "$SCRIPT_DIR/export.db" conversation_mappings "$SCRIPT_DIR/conversation_mappings.json"
-rm conversation_mappings.json
+rm "$SCRIPT_DIR/conversation_mappings.json"
 
 # Step 4: Import other JSON files into export.db
 echo "Inserting data from model_comparisons.json with 'id' as primary key..."
