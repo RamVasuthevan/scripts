@@ -1,0 +1,25 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "demo",
+      "type": "shell",
+      "command": "mkdir -p demo_output && echo $(uuidgen) > demo_output/$(date -u +'%Y-%m-%dT%H-%M-%SZ').txt",
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "delete-demo-output",
+      "type": "shell",
+      "command": "rm -rf demo_output",
+      "group": {
+        "kind": "clean",
+        "isDefault": false
+      },
+      "problemMatcher": []
+    }
+  ]
+}
